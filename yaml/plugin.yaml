@@ -1,0 +1,8 @@
+##################################################################################
+# Cloudify Diamond plugin definition.
+##################################################################################
+
+plugins:
+    diamond:
+        executor: host_agent
+        source: https://github.com/cloudify-cosmo/cloudify-diamond-plugin/archive/1.2m6.zip

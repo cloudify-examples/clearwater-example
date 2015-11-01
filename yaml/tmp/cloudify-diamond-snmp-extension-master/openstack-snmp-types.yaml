@@ -1,0 +1,17 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+node_types:
+
+  SNMPSecurityGroup:
+    derived_from: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      security_group:
+        default:
+          name: snmp_security_group
+          description: Allows UDP communication for SNMP
+      rules:
+        default:
+          - remote_ip_prefix: 0.0.0.0/0
+            port: 161
+            protocol: udp
+
