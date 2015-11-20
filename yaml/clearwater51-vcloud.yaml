@@ -563,7 +563,7 @@ node_templates:
         type: cloudify.nodes.SoftwareComponent
         interfaces:
            cloudify.interfaces.lifecycle:
-              start:
+              create:
                  implementation: scripts/bono.sh
                  inputs:
                     public_ip: { get_input: bono_public_ip }
