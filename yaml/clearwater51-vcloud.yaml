@@ -1,10 +1,10 @@
-tosca_definitions_version: cloudify_dsl_1_0
+tosca_definitions_version: cloudify_dsl_1_2
 
 ########################################################
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.2m6/types.yaml
-  - https://raw.githubusercontent.com/cloudify-cosmo/tosca-vcloud-plugin/1.3m4/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-cosmo/tosca-vcloud-plugin/TI/plugin.yaml
   - diamond.yaml
 
 ########################################################
@@ -93,6 +93,12 @@ inputs:
         type: string
         default: Public Catalog
 
+    ssl_verify:
+      type: boolean
+      default: false
+      description: >
+          ssl check for connections to private services
+          (disable self-signed certificates)
 
 #######################################################
 
@@ -215,6 +221,7 @@ node_templates:
                 api_version: { get_input: vcloud_api_version }
                 org_url: { get_input: vcloud_org_url }
                 edge_gateway: { get_input: edge_gateway }
+                ssl_verify: { get_input: ssl_verify }
 
 ########################################################
 # COMMON NETWORK CONFIGURATION
