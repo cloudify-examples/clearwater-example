@@ -1,0 +1,51 @@
+vcloud_username: **********
+vcloud_password: **********
+vcloud_url: *********
+vcloud_service: ***********
+vcloud_service_type: ***********
+vcloud_instance: ***********
+vcloud_api_version: 5.5
+vcloud_org: ***********
+vcloud_vdc: ***********
+catalog: ***********
+ssl_verify: false
+
+#######################################################
+
+template: Ubuntu 14.04.3 LTS (Trusty Tahr)
+server_cpu: 2
+server_memory: 4096
+
+#######################################################
+
+server_user: ubuntu
+manager_privat_key_path: /root/.ssh/agent_key.pem
+manager_public_key: ***********
+
+#######################################################
+
+common_network_public_nat_use_existing: ***********
+network_use_existing: ***********
+common_network_name: ***********
+edge_gateway: ***********
+common_network_static_ip_range: 10.67.90.129-10.67.90.254
+common_network_mask: 255.255.255.0
+common_network_gateway_ip: 10.67.90.1
+common_network_dns:
+    - 10.67.90.1
+    - 8.8.8.8
+common_network_dhcp_range: 10.67.90.2-10.67.90.128
+
+#######################################################
+
+clearwater_public_ip: ***********
+
+#######################################################
+
+bono_public_ip: ***********
+
+#######################################################
+
+ellis_public_ip: ***********
+
+########################################################
