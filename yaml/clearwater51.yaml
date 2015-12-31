@@ -1,5 +1,7 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
+########################################################
+
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.2m6/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.2m6/plugin.yaml
@@ -7,11 +9,14 @@ imports:
   - snmp-types.yaml
   - openstack-snmp-types.yaml
 
+########################################################
+
 plugins:
     dns-plugin:
         executor: host_agent
         source: dns-plugin
 
+########################################################
 relationships:
     dns_client_uses_dns_server:
        derived_from: cloudify.relationships.connected_to
@@ -19,6 +24,8 @@ relationships:
           cloudify.interfaces.relationship_lifecycle:
              preconfigure: dns-plugin.dns_plugin.tasks.configure_resolv_conf
 
+
+########################################################
 node_types:
     policy_node_type:
        derived_from: cloudify.nodes.SoftwareComponent
@@ -33,7 +40,8 @@ node_types:
              stop:
                 implementation: scripts/policy-stop.sh
                 executor: central_deployment_agent
-    
+########################################################
+
 inputs:
     server:
         default:
@@ -41,6 +49,7 @@ inputs:
             flavor_name: standard.medium 
             security_groups: ['All_ports_open']
 
+########################################################
 
 node_templates:
     a_node:
@@ -67,11 +76,6 @@ node_templates:
     ellis_ip:
         type: cloudify.openstack.nodes.FloatingIP
 
-#    cassandra_anti-affinity:
-#        type: cloudify.openstack.nodes.AffinityGroup
-#        properties:
-#           policy: anti-affinity
-#           group-name: cassandra 
 
     bono_vm:
         type: cloudify.openstack.nodes.Server 
@@ -100,28 +104,6 @@ node_templates:
                   inputs:
                      collectors_config:
                            CPUCollector: {}
-
-#    snmpd_configuring_node:
-#      type: SnmpdConfiguringNode
-#      relationships:
-#        - type: cloudify.relationships.contained_in
-#          target: bono_vm
-
-#    snmp_proxy_node:
-#      type: SNMPManagerProxy
-#      relationships:
-#       - type: cloudify.relationships.depends_on
-#         target: snmpd_configuring_node # Assure that Diamond starts after snmpd is configured
-#       - type: cloudify.relationships.monitors
-#         target: bono_vm
-#         source_interfaces:
-#           cloudify.interfaces.relationship_lifecycle:
-#             preconfigure:
-#               inputs:
-#                 oids:
-#                   1.2.826.0.1.1578918.9.2.4.1.2: requests
-
-
 
     ellis_vm:
         type: cloudify.openstack.nodes.Server
@@ -165,8 +147,7 @@ node_templates:
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
-#            -   type: cloudify.relationships.depends_on
-#                target: cassandra_anti-affinity
+
     
     homestead_vm:
         type: cloudify.openstack.nodes.Server
@@ -175,8 +156,7 @@ node_templates:
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
-#            -   type: cloudify.relationships.depends_on
-#                target: cassandra_anti-affinity
+
                 
     ralf_vm:
         type: cloudify.openstack.nodes.Server
@@ -209,7 +189,7 @@ node_templates:
                   port_range_max: 65535
                   protocol: udp
 
-
+########################################################
     bono_app:
         type: cloudify.nodes.SoftwareComponent
         interfaces:
@@ -219,8 +199,6 @@ node_templates:
                  inputs:
                     public_ip: { get_attribute: [ bono_ip, floating_ip_address ] }
                     dns_ip: { get_attribute: [ dns_vm, ip ]  }
-#                    process:
-#                       command_prefix: "/usr/bin/sudo dns_ip=$dns_ip: public_ip=$public_ip "
         relationships:
             -  type: cloudify.relationships.contained_in
                target: bono_vm
@@ -236,8 +214,6 @@ node_templates:
                  inputs:
                     public_ip: { get_attribute: [ellis_ip, floating_ip_address] }
                     dns_ip: { get_attribute: [dns_vm, ip] }
-#                    process:
-#                       command_prefix: /usr/bin/sudo
         relationships:
             -  type: cloudify.relationships.contained_in
                target: ellis_vm
@@ -252,8 +228,6 @@ node_templates:
                  implementation: scripts/ralf.sh
                  inputs:
                     dns_ip: { get_attribute: [ dns_vm, ip ] }
-#                    process:
-#                       command_prefix: /usr/bin/sudo
         relationships:
             -  type: cloudify.relationships.contained_in
                target: ralf_vm
@@ -268,8 +242,6 @@ node_templates:
                  implementation: scripts/homestead.sh
                  inputs:
                     dns_ip: { get_attribute: [dns_vm, ip] }
-#                    process:
-#                       command_prefix: /usr/bin/sudo
         relationships:
             -  type: cloudify.relationships.contained_in
                target: homestead_vm
@@ -284,8 +256,6 @@ node_templates:
                  implementation: scripts/homer.sh
                  inputs:
                     dns_ip: { get_attribute: [dns_vm, ip] }
-#                   process:
-#                      command_prefix: /usr/bin/sudo
         relationships:
             -  type: cloudify.relationships.contained_in
                target: homer_vm
@@ -300,8 +270,6 @@ node_templates:
                  implementation: scripts/sprout.sh
                  inputs:
                     dns_ip: { get_attribute: [dns_vm, ip] }
-#                   process:
-#                      command_prefix: /usr/bin/sudo
         relationships:
             -  type: cloudify.relationships.contained_in
                target: sprout_vm
@@ -316,11 +284,11 @@ node_templates:
                  implementation: scripts/dns.sh
                  inputs:
                     dns_ip: { get_attribute: [dns_vm, ip] }
-#                    process:
-#                       command_prefix: /usr/bin/sudo
         relationships:
             -  type: cloudify.relationships.contained_in
                target: dns_vm
+
+########################################################
 
     dns_app_config:
         type: cloudify.nodes.SoftwareComponent

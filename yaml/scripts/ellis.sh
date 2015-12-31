@@ -66,11 +66,6 @@ send
 EOF
 
 while ! { sudo -E nsupdate -y "example.com:8r6SIIX/cWE6b0Pe8l2bnc/v5vYbMSYvj+jQPP4bWe+CXzOpojJGrXI7iiustDQdWtBHUpWxweiHDWvLIp6/zw==" -v /home/ubuntu/dnsupdatefile
-#server ${dns_ip}
-#update add ellis-0.example.com. 30 A ${public_ip}
-#update add ellis.example.com. 30 A ${public_ip}
-#send
-#EOF
 } && [ $retries -lt 10 ]
 do
   retries=$((retries + 1))

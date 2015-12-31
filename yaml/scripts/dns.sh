@@ -39,8 +39,8 @@ sudo bash -c 'cat > /etc/bind/openstacklocal.local << EOF
 ;@      IN      AAAA    ::1
 EOF'
 
-# Create basic zone configuration.
-ctx logger info "DNS IP address is ${dns_ip} bbbbbbllllaaaaaa"
+# zone configuration.
+ctx logger info "DNS IP address is ${dns_ip}"
 sudo echo ${dns_ip} > /home/ubuntu/dnsfile
 sudo bash -c 'cat > /var/lib/bind/db.example.com<< EOF                    
 ; example.com
