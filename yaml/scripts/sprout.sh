@@ -79,11 +79,6 @@ EOF
 
 retries=0
 while ! { sudo -E nsupdate -y "example.com:8r6SIIX/cWE6b0Pe8l2bnc/v5vYbMSYvj+jQPP4bWe+CXzOpojJGrXI7iiustDQdWtBHUpWxweiHDWvLIp6/zw==" -v /home/ubuntu/dnsupdatefile
-#server ${dns_ip}
-#update add sprout-0.example.com. 30 A $(hostname -I)
-#update add sprout.example.com. 30 A $(hostname -I)
-#send
-#EOF
 } && [ $retries -lt 10 ]
 do
   retries=$((retries + 1))
