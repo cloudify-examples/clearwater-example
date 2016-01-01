@@ -16,25 +16,30 @@ The blueprint supports healing, e.g you can kill Bono and a new VM would be inst
 Step 1:
 To upload the blueprint to the manager run the following command from CFY
 
-CFY blueprints upload -b <blueprint name> -p clearwter51.yaml
+CFY blueprints upload -b blueprint_name -p clearwter51.yaml
+
 
 
 Step 2:
 To create a deployment type the following from CFY
 
-CFY deployments create - <blueprint name> -d <deployment name>
+CFY deployments create -b blueprint_name -d deployment_name
+
 
 
 Step 3:
 Tp create a running execution  type the following in CFY
 
-CFY executions start -d <deployment name> -w install
+CFY executions start -d deployment_name -w install
+
 
 Step 4:
 
 To delete a running executions type the following in CFY
 
-CFY executions start -d <deployment name> -w uninstall
+CFY executions start -d deployment_name -w uninstall
+
+
 
 The following picture shows a running deployment example as it appears in the GUI
 
