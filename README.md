@@ -42,5 +42,5 @@ CFY executions start -d deployment_name -w uninstall
 
 
 The following picture shows a running deployment example as it appears in the GUI
-
+![alt text](https://github.com/cloudify-examples/clearwater-scripts-plugin-blueprint/blob/master/yaml/images/Clearwater.jpg "ClearWater Deployment")
 
