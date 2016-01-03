@@ -1,44 +1,44 @@
-# TOSCA based deployment and monitoring of Clearwater vIMS
-Onboarding vIMS Clearwter from MetaSwitch with Cloudify, a TOSCA based VNF Orchestrator and policy engine.
-Here is a link [Cloudify full life cycle video] (http://www.youtube.com/embed/ZsT78d1BR5s?enablejsapi=1&wmode=opaque to a video describing the full LCM (life cycle management)) from deployment, configuration, monitoring to healing/scaling corrective acctions and remediation. Upload clearwater51.yaml under the yaml directory, create a deployment and execute it.
+# TOSCA Based Deployment and Monitoring of Clearwater vIMS
+This repository contains a [Cloudify](http://getcloudify.org) blueprint for deploying MetaSwitch Clearwater vIMS Cloudify, a TOSCA based VNF Orchestrator and policy engine.
+[This video](https://youtu.be/ZsT78d1BR5s) shows how the bluerint is used for deployment, configuration, monitoring and healing/scalingof Clearwater. 
 
+## Repository Contents
 This repository includes the following:
 
-1. A TOSCA Blueprints to on-board Clearwater on OpenStack and VMWare vCloud Director, Clearwater51.yaml and Clearwater-vcloud.yaml
+1. A TOSCA blueprints to deploy Clearwater on OpenStack (`clearwater51.yaml`) and VMWare vCloud Director (`clearwater-vcloud.yaml`) including relationships and dependencies between the various Clearwater componentsare
 2. A DNS plugin to point each node (Bono, Ellis, Homer, Homestead, Sprout and Ralf) to the deployed DNS
-3. Scripts to install the application stack on each node.
-4. Relationships and dependencies are expressed in the TOSCA blueprint YAML file.
-
-The blueprint supports healing, e.g you can kill Bono and a new VM would be instantiated and the application stack is installed on it including relationships to other nodes.
+3. Scripts to install the application stack on each node
 
 
+The blueprint supports healing, e.g you can kill Bono and as a result a new VM would be instantiated and the Bono application stack will be installed on it. The relationships to other nodes will make sure that these nodes are also wired properly with the newly created Bono VM. 
 
-Step 1:
-To upload the blueprint to the manager run the following command from CFY
+## Using the Blueprint
+#### Step 0 
+[Install the Cloudify CLI](http://docs.getcloudify.org/3.3.0/intro/installation/) and [bootstrap a Cloudify manager](http://docs.getcloudify.org/3.3.0/manager/bootstrapping/). 
 
-CFY blueprints upload -b blueprint_name -p clearwter51.yaml
+#### Step 1
+Upload the blueprint to the manager using the following command: 
+```
+cfy blueprints upload -b blueprint_name -p clearwter51.yaml
+```
 
+#### Step 2
+Create a deployment using the following command:
+```
+cfy deployments create -b blueprint_name -d deployment_name
+```
 
+#### Step 3 
+Invoke the `install` workflow: 
+```
+cfy executions start -d deployment_name -w install
+```
 
-Step 2:
-To create a deployment type the following from CFY
-
-CFY deployments create -b blueprint_name -d deployment_name
-
-
-
-Step 3:
-Tp create a running execution  type the following in CFY
-
-CFY executions start -d deployment_name -w install
-
-
-Step 4:
-
-To delete a running executions type the following in CFY
-
-CFY executions start -d deployment_name -w uninstall
-
+#### Uninstalling
+To uninstall and delete the running deployment, invoke the `uninstall` workflow: 
+```
+cfy executions start -d deployment_name -w uninstall
+```
 
 
 The following picture shows a running deployment example as it appears in the GUI
