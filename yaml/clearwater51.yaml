@@ -1,11 +1,11 @@
-tosca_definitions_version: cloudify_dsl_1_0
+tosca_definitions_version: cloudify_dsl_1_2
 
 ########################################################
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.2m6/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.2m6/plugin.yaml
-  - diamond.yaml
+  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3.1/plugin.yaml
+  - http://www.getcloudify.org/spec/diamond-plugin/1.3.1/plugin.yaml
   - snmp-types.yaml
   - openstack-snmp-types.yaml
 
@@ -31,7 +31,7 @@ node_types:
        derived_from: cloudify.nodes.SoftwareComponent
        properties:
           nodes_to_monitor:
-             default: [] 
+             default: []
        interfaces:
           cloudify.interfaces.lifecycle:
              start:
@@ -43,10 +43,14 @@ node_types:
 ########################################################
 
 inputs:
+    cloudify_agent:
+        default:
+            user: 'ubuntu'
+
     server:
         default:
-            image: 564be9dd-5a06-4a26-ba50-9453f972e483 # Ubuntu Server 14.04
-            flavor_name: standard.medium 
+            image: e8e1ddb9-80e8-4257-96c4-22d4f2a4927f # Ubuntu Server 14.04
+            flavor_name: m1.medium
             security_groups: ['All_ports_open']
 
 ########################################################
@@ -78,21 +82,22 @@ node_templates:
 
 
     bono_vm:
-        type: cloudify.openstack.nodes.Server 
+        type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: bono_ip
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
-                
-        interfaces:          
+
+        interfaces:
             cloudify.interfaces.monitoring_agent:
                install:
                   implementation: diamond.diamond_agent.tasks.install
                   inputs:
-                     diamond_config: 
+                     diamond_config:
                         interval: 5
                start: diamond.diamond_agent.tasks.start
                stop: diamond.diamond_agent.tasks.stop
@@ -108,17 +113,19 @@ node_templates:
     ellis_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ellis_ip
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
-        
+
     sprout_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
@@ -143,43 +150,47 @@ node_templates:
     homer_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
 
-    
+
     homestead_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
 
-                
+
     ralf_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
-                
+
     dns_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-           server: { get_input: server }
+            cloudify_agent: { get_input: cloudify_agent }
+            server: { get_input: server }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
-                
+
     All_ports_open:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: All_ports_open
-            rules: 
+            rules:
                 - remote_ip_prefix: 0.0.0.0/0
                   port_range_min: 1
                   port_range_max: 65535
@@ -204,7 +215,7 @@ node_templates:
                target: bono_vm
             -  type: dns_client_uses_dns_server
                target: dns_app
-               
+
     ellis_app:
         type: cloudify.nodes.SoftwareComponent
         interfaces:
@@ -219,9 +230,9 @@ node_templates:
                target: ellis_vm
             -  type: dns_client_uses_dns_server
                target: dns_app
-               
+
     ralf_app:
-        type: cloudify.nodes.SoftwareComponent 
+        type: cloudify.nodes.SoftwareComponent
         interfaces:
            cloudify.interfaces.lifecycle:
               create:
@@ -233,9 +244,9 @@ node_templates:
                target: ralf_vm
             -  type: dns_client_uses_dns_server
                target: dns_app
-               
+
     homestead_app:
-        type: cloudify.nodes.SoftwareComponent 
+        type: cloudify.nodes.SoftwareComponent
         interfaces:
            cloudify.interfaces.lifecycle:
               create:
@@ -247,7 +258,7 @@ node_templates:
                target: homestead_vm
             -  type: dns_client_uses_dns_server
                target: dns_app
-               
+
     homer_app:
         type: cloudify.nodes.SoftwareComponent
         interfaces:
@@ -261,9 +272,9 @@ node_templates:
                target: homer_vm
             -  type: dns_client_uses_dns_server
                target: dns_app
-               
+
     sprout_app:
-        type: cloudify.nodes.SoftwareComponent 
+        type: cloudify.nodes.SoftwareComponent
         interfaces:
            cloudify.interfaces.lifecycle:
               create:
@@ -277,7 +288,7 @@ node_templates:
                target: dns_app
 
     dns_app:
-        type: cloudify.nodes.SoftwareComponent 
+        type: cloudify.nodes.SoftwareComponent
         interfaces:
            cloudify.interfaces.lifecycle:
               create:
@@ -316,4 +327,4 @@ node_templates:
                    target: homer_app
                 -  type: cloudify.relationships.connected_to
                    target: homestead_app
-    
+
