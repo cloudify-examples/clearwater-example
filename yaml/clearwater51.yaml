@@ -42,14 +42,16 @@ node_types:
 
 inputs:
     cloudify_agent:
-        default:
-            user: 'ubuntu'
+        default:  'ubuntu'
 
-    server:
-        default:
-            image: e8e1ddb9-80e8-4257-96c4-22d4f2a4927f # Ubuntu Server 14.04
-            flavor_name: m1.medium
-            security_groups: ['All_ports_open']
+    server_image:
+        default: e8e1ddb9-80e8-4257-96c4-22d4f2a4927f # Ubuntu Server 14.04
+
+    server_flavor_name:
+        default: m1.medium
+
+    server_security_groups:
+        default: ['All_ports_open']
 
 ########################################################
 
@@ -82,8 +84,12 @@ node_templates:
     bono_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: bono_ip
@@ -111,8 +117,12 @@ node_templates:
     ellis_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ellis_ip
@@ -122,8 +132,12 @@ node_templates:
     sprout_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
@@ -148,8 +162,12 @@ node_templates:
     homer_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
@@ -158,8 +176,12 @@ node_templates:
     homestead_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
@@ -168,8 +190,12 @@ node_templates:
     ralf_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
@@ -177,8 +203,12 @@ node_templates:
     dns_vm:
         type: cloudify.openstack.nodes.Server
         properties:
-            cloudify_agent: { get_input: cloudify_agent }
-            server: { get_input: server }
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.relationships.depends_on
                 target: All_ports_open
@@ -326,3 +356,9 @@ node_templates:
                 -  type: cloudify.relationships.connected_to
                    target: homestead_app
 
+outputs:
+  web:
+    description: Web application endpoint
+    value:
+      ip_address: { get_attribute: [ ellis_ip, floating_ip_address ] }
+      signup_code: secret
