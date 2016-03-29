@@ -47,14 +47,14 @@ sudo -E bash -c 'cat > /etc/chronos/chronos.conf << EOF
 bind-address = $(hostname -I)
 bind-port = 7253
 threads = 50
-                                 
+
 [logging]
 folder = /var/log/chronos
 level = 2
-                                                                                                   
+
 [alarms]
 enabled = true
-                                                                                                                                                   
+
 [exceptions]
 max_ttl = 600
 EOF'
@@ -66,7 +66,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install ralf --yes --force-yes -o DP
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes --force-yes
 
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
+#sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 # Update DNS
 

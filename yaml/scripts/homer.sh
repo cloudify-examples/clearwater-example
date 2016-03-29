@@ -46,7 +46,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install homer --yes --force-yes -o D
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes --force-yes
 
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
+#sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 # Update DNS
 cat > /home/ubuntu/dnsupdatefile << EOF

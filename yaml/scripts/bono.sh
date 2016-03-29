@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 ctx logger info "In Bono ${public_ip}   ${dns_ip}   "
 
 echo "In Bono ${public_ip}   ${dns_ip}   " > /home/ubuntu/dnsfile
@@ -49,7 +49,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install bono --yes --force-yes -o DP
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-config-manager --yes --force-yes
 
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
+#sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 
 cat > /home/ubuntu/dnsupdatefile << EOF
