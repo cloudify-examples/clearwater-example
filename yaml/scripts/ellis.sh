@@ -73,3 +73,5 @@ do
   sleep 5
 done
 
+sudo service clearwater-infrastructure restart
+sudo service ellis stop
