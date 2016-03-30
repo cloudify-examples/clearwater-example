@@ -48,11 +48,17 @@ ellis_api_key=secret
 ellis_cookie_key=secret
 EOF'
 
+sleep 20
+
 sudo -E /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
 #sudo -E /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
+sleep 20
+
 # Allocate a allocate a pool of numbers to assign to users.
 sudo /usr/share/clearwater/ellis/env/bin/python /usr/share/clearwater/ellis/src/metaswitch/ellis/tools/create_numbers.py --start 6505550000 --count 1000
+
+sleep 20
 
 ctx logger info "before updating DNS ${dns_ip}"
 
