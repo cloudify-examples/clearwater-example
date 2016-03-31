@@ -360,5 +360,6 @@ outputs:
   web:
     description: Web application endpoint
     value:
-      ip_address: { get_attribute: [ ellis_ip, floating_ip_address ] }
+      ip_ellis: { get_attribute: [ ellis_ip, floating_ip_address ] }
+      ip_bono: { get_attribute: [ bono_ip, floating_ip_address ] }
       signup_code: secret
