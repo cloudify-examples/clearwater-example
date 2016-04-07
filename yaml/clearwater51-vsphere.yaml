@@ -83,6 +83,9 @@ node_templates:
 
     bono_vm:
         type: cloudify.vsphere.nodes.Server
+        relationships:
+           - target: homestead_vm
+             type: cloudify.relationships.depends_on
         properties:
             cloudify_agent:
                 user: { get_input: agent_user }
@@ -118,6 +121,9 @@ node_templates:
 
     ellis_vm:
         type: cloudify.vsphere.nodes.Server
+        relationships:
+            - target: bono_vm
+              type: cloudify.relationships.depends_on
         properties:
             cloudify_agent:
                 user: { get_input: agent_user }
@@ -136,6 +142,11 @@ node_templates:
 
     sprout_vm:
         type: cloudify.vsphere.nodes.Server
+        relationships:
+           - target: homer_vm
+             type: cloudify.relationships.depends_on
+           - target: homestead_vm
+             type: cloudify.relationships.depends_on
         properties:
             cloudify_agent:
                 user: { get_input: agent_user }
@@ -225,6 +236,20 @@ node_templates:
 
     dns_vm:
         type: cloudify.vsphere.nodes.Server
+        relationships:
+            - target: bono_vm
+              type: cloudify.relationships.depends_on
+            - target: ellis_vm
+              type: cloudify.relationships.depends_on
+            - target: sprout_vm
+              type: cloudify.relationships.depends_on
+            - target: homer_vm
+              type: cloudify.relationships.depends_on
+            - target: homestead_vm
+              type: cloudify.relationships.depends_on
+            - target: ralf_vm
+              type: cloudify.relationships.depends_on
+
         properties:
             cloudify_agent:
                 user: { get_input: agent_user }
