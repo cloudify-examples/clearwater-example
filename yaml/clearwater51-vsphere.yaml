@@ -91,7 +91,7 @@ node_templates:
                 user: { get_input: agent_user }
             server:
                 template: { get_input: template_name }
-                cpus: 1
+                cpus: 2
                 memory: 2048
             networking:
                 connect_networks:
@@ -152,7 +152,7 @@ node_templates:
                 user: { get_input: agent_user }
             server:
                 template: { get_input: template_name }
-                cpus: 1
+                cpus: 2
                 memory: 2048
             networking:
                 connect_networks:
@@ -186,7 +186,7 @@ node_templates:
                 user: { get_input: agent_user }
             server:
                 template: { get_input: template_name }
-                cpus: 1
+                cpus: 2
                 memory: 2048
             networking:
                 connect_networks:
@@ -204,7 +204,7 @@ node_templates:
                 user: { get_input: agent_user }
             server:
                 template: { get_input: template_name }
-                cpus: 1
+                cpus: 2
                 memory: 2048
             networking:
                 connect_networks:
@@ -223,7 +223,7 @@ node_templates:
                 user: { get_input: agent_user }
             server:
                 template: { get_input: template_name }
-                cpus: 1
+                cpus: 2
                 memory: 2048
             networking:
                 connect_networks:
@@ -398,5 +398,6 @@ outputs:
   web:
     description: Web application endpoint
     value:
-      ip_address: { get_attribute: [ ellis_vm, public_ip ] }
+      ip_ellis: { get_attribute: [ ellis_vm, public_ip ] }
+      ip_bono: { get_attribute: [ bono_vm, public_ip ] }
       signup_code: secret
