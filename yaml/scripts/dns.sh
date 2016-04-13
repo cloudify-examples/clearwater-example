@@ -42,13 +42,21 @@ EOF'
 # zone configuration.
 ctx logger info "DNS IP address is ${dns_ip}"
 sudo echo ${dns_ip} > /home/ubuntu/dnsfile
-sudo bash -c 'cat > /var/lib/bind/db.example.com<< EOF                    
+sudo bash -c 'cat > /var/lib/bind/db.example.com<< EOF
 ; example.com
+\$TTL 5m
 \$ORIGIN example.com.
-\$TTL 1h
-@ IN SOA ns admin\@example.com. ( $(date +%Y%m%d%H) 1d 2h 1w 30s )
-@ NS ns
-ns A $(hostname -I) 
+
+@               3600    IN SOA  ns.example.com. admin.example.com. (
+                                2016040638 ; serial
+                                86400      ; refresh (1 day)
+                                7200       ; retry (2 hours)
+                                604800     ; expire (1 week)
+                                30         ; minimum (30 seconds)
+                                )
+@               3600    IN      NS      ns.example.com.
+
+ns A $(hostname -I)
 EOF'
 sudo chown root:bind /var/lib/bind/db.example.com
 # Now that BIND configuration is correct, kick it to reload.

@@ -46,6 +46,10 @@ signup_key=secret
 turn_workaround=secret
 ellis_api_key=secret
 ellis_cookie_key=secret
+
+upstream_hostname=scscf.\$sprout_hostname
+upstream_port=5054
+
 EOF'
 
 sudo -E /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config

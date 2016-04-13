@@ -35,11 +35,16 @@ smtp_smarthost=localhost
 smtp_username=username
 smtp_password=password
 email_recovery_sender=clearwater@example.org
+
 # Keys
 signup_key=secret
 turn_workaround=secret
 ellis_api_key=secret
 ellis_cookie_key=secret
+
+upstream_hostname=scscf.\$sprout_hostname
+upstream_port=5054
+
 EOF'
 
 
@@ -56,6 +61,10 @@ cat > /home/ubuntu/dnsupdatefile << EOF
 server ${dns_ip}
 update add bono-0.example.com. 30 A ${public_ip}
 update add example.com. 30 A ${public_ip}
+update add example.com. 30 NAPTR   1 1 "S" "SIP+D2T" "" _sip._tcp
+update add example.com. 30 NAPTR   2 1 "S" "SIP+D2U" "" _sip._udp
+update add _sip._tcp.example.com. 30 SRV     0 0 5060 bono-0
+update add _sip._udp.example.com. 30 SRV     0 0 5060 bono-0
 send
 EOF
 
