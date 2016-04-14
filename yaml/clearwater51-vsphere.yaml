@@ -42,22 +42,22 @@ node_types:
 ########################################################
 
 inputs:
+    cloudify_agent:
+        default:  'ubuntu'
+        description: >
+            User for connecting to application VMs
 
-  template_name:
-    description: >
-      Template to clone VMs from
+    template_name:
+        description: >
+            Template to clone VMs from
 
-  agent_user:
-    description: >
-      User for connecting to application VMs
+    management_network:
+        description: >
+            Which network to deploy the VM on
 
-  management_network:
-    description: >
-      Which network to deploy the VM on
-
-  external_network:
-    description: >
-      Which network to deploy the VM on
+    external_network:
+        description: >
+            Which network to deploy the VM on
 
 ########################################################
 
@@ -83,12 +83,9 @@ node_templates:
 
     bono_vm:
         type: cloudify.vsphere.nodes.Server
-        relationships:
-           - target: homestead_vm
-             type: cloudify.relationships.depends_on
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 2
@@ -101,6 +98,9 @@ node_templates:
                     - name: { get_input: external_network }
                       switch_distributed: True
                       external: True
+        relationships:
+           - target: homestead_vm
+             type: cloudify.relationships.depends_on
         interfaces:
             cloudify.interfaces.monitoring_agent:
                install:
@@ -121,12 +121,9 @@ node_templates:
 
     ellis_vm:
         type: cloudify.vsphere.nodes.Server
-        relationships:
-            - target: bono_vm
-              type: cloudify.relationships.depends_on
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 1
@@ -139,17 +136,15 @@ node_templates:
                     - name: { get_input: external_network }
                       switch_distributed: True
                       external: True
+        relationships:
+            - target: bono_vm
+              type: cloudify.relationships.depends_on
 
     sprout_vm:
         type: cloudify.vsphere.nodes.Server
-        relationships:
-           - target: homer_vm
-             type: cloudify.relationships.depends_on
-           - target: homestead_vm
-             type: cloudify.relationships.depends_on
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 2
@@ -162,6 +157,12 @@ node_templates:
                     - name: { get_input: external_network }
                       switch_distributed: True
                       external: True
+        relationships:
+           - target: homer_vm
+             type: cloudify.relationships.depends_on
+           - target: homestead_vm
+             type: cloudify.relationships.depends_on
+
         interfaces:
             cloudify.interfaces.monitoring_agent:
                install:
@@ -183,7 +184,7 @@ node_templates:
         type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 2
@@ -201,7 +202,7 @@ node_templates:
         type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 2
@@ -220,7 +221,7 @@ node_templates:
         type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 2
@@ -252,7 +253,7 @@ node_templates:
 
         properties:
             cloudify_agent:
-                user: { get_input: agent_user }
+                user: { get_input: cloudify_agent }
             server:
                 template: { get_input: template_name }
                 cpus: 1
