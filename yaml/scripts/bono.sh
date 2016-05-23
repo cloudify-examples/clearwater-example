@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 ctx logger info "In Bono ${public_ip}   ${dns_ip}   "
 
 echo "In Bono ${public_ip}   ${dns_ip}   " > /home/ubuntu/dnsfile
@@ -35,11 +35,16 @@ smtp_smarthost=localhost
 smtp_username=username
 smtp_password=password
 email_recovery_sender=clearwater@example.org
+
 # Keys
 signup_key=secret
 turn_workaround=secret
 ellis_api_key=secret
 ellis_cookie_key=secret
+
+upstream_hostname=scscf.\$sprout_hostname
+upstream_port=5054
+
 EOF'
 
 
@@ -49,13 +54,17 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install bono --yes --force-yes -o DP
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-config-manager --yes --force-yes
 
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
+#sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 
 cat > /home/ubuntu/dnsupdatefile << EOF
 server ${dns_ip}
 update add bono-0.example.com. 30 A ${public_ip}
 update add example.com. 30 A ${public_ip}
+update add example.com. 30 NAPTR   1 1 "S" "SIP+D2T" "" _sip._tcp
+update add example.com. 30 NAPTR   2 1 "S" "SIP+D2U" "" _sip._udp
+update add _sip._tcp.example.com. 30 SRV     0 0 5060 bono-0
+update add _sip._udp.example.com. 30 SRV     0 0 5060 bono-0
 send
 EOF
 

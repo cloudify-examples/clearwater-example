@@ -1,0 +1,91 @@
+##################################################################################
+# Cloudify vSphere built in types and plugins definitions.
+##################################################################################
+
+plugins:
+    vsphere:
+        executor: central_deployment_agent
+        package_name: cloudify-vsphere-plugin
+        package_version: '1.3.1'
+
+node_types:
+    cloudify.vsphere.nodes.Server:
+        derived_from: cloudify.nodes.Compute
+        properties:
+            server: {}
+            networking: {}
+            connection_config:
+                default: {}
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                start:
+                    implementation: vsphere.server_plugin.server.start
+                    inputs: {}
+                stop:
+                    implementation: vsphere.server_plugin.server.stop
+                    inputs: {}
+                shutdown_guest:
+                    implementation: vsphere.server_plugin.server.shutdown_guest
+                    inputs: {}
+                delete:
+                    implementation: vsphere.server_plugin.server.delete
+                    inputs: {}
+            cloudify.interfaces.host:
+                get_state:
+                    implementation: vsphere.server_plugin.server.get_state
+                    inputs: {}
+
+    cloudify.vsphere.nodes.Network:
+        derived_from: cloudify.nodes.Network
+        properties:
+            network: {}
+            connection_config:
+                default: {}
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                create:
+                    implementation: vsphere.network_plugin.network.create
+                    inputs: {}
+                delete:
+                    implementation: vsphere.network_plugin.network.delete
+                    inputs: {}
+
+    cloudify.vsphere.nodes.Port:
+        derived_from: cloudify.nodes.Port
+        properties:
+            port: {}
+            connection_config:
+                default: {}
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                create:
+                    implementation: vsphere.network_plugin.port.create
+                    inputs: {}
+                delete:
+                    implementation: vsphere.network_plugin.port.delete
+                    inputs: {}
+
+    cloudify.vsphere.nodes.Storage:
+        derived_from: cloudify.nodes.Volume
+        properties:
+            storage: {}
+            connection_config:
+                default: {}
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                create:
+                    implementation: vsphere.storage_plugin.storage.create
+                    inputs: {}
+                delete:
+                    implementation: vsphere.storage_plugin.storage.delete
+                    inputs: {}
+
+relationships:
+    cloudify.vsphere.port_connected_to_network:
+        derived_from: cloudify.relationships.connected_to
+
+    cloudify.vsphere.port_connected_to_server:
+        derived_from: cloudify.relationships.connected_to
+
+    cloudify.vsphere.storage_connected_to_server:
+        derived_from: cloudify.relationships.connected_to

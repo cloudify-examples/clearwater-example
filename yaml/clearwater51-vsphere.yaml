@@ -4,7 +4,8 @@ tosca_definitions_version: cloudify_dsl_1_2
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.3.1/plugin.yaml
+# - http://www.getcloudify.org/spec/vsphere-plugin/1.3.1/plugin.yaml
+  - vsphere-plugin.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.1/plugin.yaml
 
 ########################################################
@@ -43,15 +44,20 @@ node_types:
 inputs:
     cloudify_agent:
         default:  'ubuntu'
+        description: >
+            User for connecting to application VMs
 
-    server_image:
-        default: e8e1ddb9-80e8-4257-96c4-22d4f2a4927f # Ubuntu Server 14.04
+    template_name:
+        description: >
+            Template to clone VMs from
 
-    server_flavor_name:
-        default: m1.medium
+    management_network:
+        description: >
+            Which network to deploy the VM on
 
-    server_security_groups:
-        default: ['All_ports_open']
+    external_network:
+        description: >
+            Which network to deploy the VM on
 
 ########################################################
 
@@ -75,27 +81,26 @@ node_templates:
               - bono_vm
               - sprout_vm
 
-    bono_ip:
-        type: cloudify.openstack.nodes.FloatingIP
-    ellis_ip:
-        type: cloudify.openstack.nodes.FloatingIP
-
-
     bono_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
+                template: { get_input: template_name }
+                cpus: 2
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
         relationships:
-            -   type: cloudify.openstack.server_connected_to_floating_ip
-                target: bono_ip
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
-
+           - target: homestead_vm
+             type: cloudify.relationships.depends_on
         interfaces:
             cloudify.interfaces.monitoring_agent:
                install:
@@ -115,32 +120,48 @@ node_templates:
                            CPUCollector: {}
 
     ellis_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
+                template: { get_input: template_name }
+                cpus: 1
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
         relationships:
-            -   type: cloudify.openstack.server_connected_to_floating_ip
-                target: ellis_ip
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+            - target: bono_vm
+              type: cloudify.relationships.depends_on
 
     sprout_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
+                template: { get_input: template_name }
+                cpus: 2
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
         relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+           - target: homer_vm
+             type: cloudify.relationships.depends_on
+           - target: homestead_vm
+             type: cloudify.relationships.depends_on
 
         interfaces:
             cloudify.interfaces.monitoring_agent:
@@ -160,73 +181,91 @@ node_templates:
                      collectors_config:
                            CPUCollector: {}
     homer_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
-        relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
-
+                template: { get_input: template_name }
+                cpus: 2
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
 
     homestead_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
-        relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+                template: { get_input: template_name }
+                cpus: 2
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
 
 
     ralf_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
-        relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+                template: { get_input: template_name }
+                cpus: 2
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
 
     dns_vm:
-        type: cloudify.openstack.nodes.Server
+        type: cloudify.vsphere.nodes.Server
+        relationships:
+            - target: bono_vm
+              type: cloudify.relationships.depends_on
+            - target: ellis_vm
+              type: cloudify.relationships.depends_on
+            - target: sprout_vm
+              type: cloudify.relationships.depends_on
+            - target: homer_vm
+              type: cloudify.relationships.depends_on
+            - target: homestead_vm
+              type: cloudify.relationships.depends_on
+            - target: ralf_vm
+              type: cloudify.relationships.depends_on
+
         properties:
             cloudify_agent:
                 user: { get_input: cloudify_agent }
             server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
-        relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
-
-    All_ports_open:
-        type: cloudify.openstack.nodes.SecurityGroup
-        properties:
-            security_group:
-                name: All_ports_open
-            rules:
-                - remote_ip_prefix: 0.0.0.0/0
-                  port_range_min: 1
-                  port_range_max: 65535
-                  protocol: tcp
-                - remote_ip_prefix: 0.0.0.0/0
-                  port_range_min: 1
-                  port_range_max: 65535
-                  protocol: udp
+                template: { get_input: template_name }
+                cpus: 1
+                memory: 2048
+            networking:
+                connect_networks:
+                    - name: { get_input: management_network }
+                      switch_distributed: True
+                      management: True
+                    - name: { get_input: external_network }
+                      switch_distributed: True
+                      external: True
 
 ########################################################
     bono_app:
@@ -236,7 +275,7 @@ node_templates:
               create:
                  implementation: scripts/bono.sh
                  inputs:
-                    public_ip: { get_attribute: [ bono_ip, floating_ip_address ] }
+                    public_ip: { get_attribute: [ bono_vm, public_ip ] }
                     dns_ip: { get_attribute: [ dns_vm, ip ]  }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -251,7 +290,7 @@ node_templates:
               create:
                  implementation: scripts/ellis.sh
                  inputs:
-                    public_ip: { get_attribute: [ellis_ip, floating_ip_address] }
+                    public_ip: { get_attribute: [ellis_vm, public_ip] }
                     dns_ip: { get_attribute: [dns_vm, ip] }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -360,6 +399,6 @@ outputs:
   web:
     description: Web application endpoint
     value:
-      ip_ellis: { get_attribute: [ ellis_ip, floating_ip_address ] }
-      ip_bono: { get_attribute: [ bono_ip, floating_ip_address ] }
+      ip_ellis: { get_attribute: [ ellis_vm, public_ip ] }
+      ip_bono: { get_attribute: [ bono_vm, public_ip ] }
       signup_code: secret

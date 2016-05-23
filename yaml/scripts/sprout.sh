@@ -31,12 +31,16 @@ smtp_smarthost=localhost
 smtp_username=username
 smtp_password=password
 email_recovery_sender=clearwater@example.org
-                                                                                                                                                                                                     
+
 # Keys
 signup_key=secret
 turn_workaround=secret
 ellis_api_key=secret
 ellis_cookie_key=secret
+
+upstream_hostname=scscf.\$sprout_hostname
+upstream_port=5054
+
 EOF'
 
 
@@ -47,14 +51,14 @@ sudo -E bash -c 'cat > /etc/chronos/chronos.conf << EOF
 bind-address = $(hostname -I)
 bind-port = 7253
 threads = 50
-                                 
+
 [logging]
 folder = /var/log/chronos
 level = 2
-                                                                                                   
+
 [alarms]
 enabled = true
-                                                                                                                                                   
+
 [exceptions]
 max_ttl = 600
 EOF'
@@ -64,7 +68,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install sprout --yes --force-yes -o 
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes --force-yes
 
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
+#sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 # Update DNS
 
@@ -72,6 +76,12 @@ cat > /home/ubuntu/dnsupdatefile << EOF
 server ${dns_ip}
 update add sprout-0.example.com. 30 A $(hostname -I)
 update add sprout.example.com. 30 A $(hostname -I)
+update add sprout.example.com. 30 NAPTR   1 1 "S" "SIP+D2T" "" _sip._tcp.sprout
+update add _sip._tcp.sprout.example.com.  30 SRV     0 0 5054 sprout-0
+update add icscf.sprout.example.com.  30 A  $(hostname -I)
+update add icscf.sprout.example.com.  30 NAPTR   1 1 "S" "SIP+D2T" "" _sip._tcp.icscf.sprout
+update add _sip._tcp.icscf.sprout.example.com.  30  SRV     0 0 5052 sprout-0
+update add scscf.sprout.example.com. 30 A $(hostname -I)
 send
 EOF
 

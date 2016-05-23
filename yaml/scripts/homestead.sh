@@ -37,6 +37,10 @@ signup_key=secret
 turn_workaround=secret
 ellis_api_key=secret
 ellis_cookie_key=secret
+
+upstream_hostname=scscf.\$sprout_hostname
+upstream_port=5054
+
 EOF'
 
 
@@ -48,7 +52,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install homestead homestead-prov --y
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes --force-yes
 
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
+#sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 # Update DNS
 cat > /home/ubuntu/dnsupdatefile << EOF

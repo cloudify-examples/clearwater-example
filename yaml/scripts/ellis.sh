@@ -34,25 +34,26 @@ hs_hostname=hs.example.com:8888
 hs_provisioning_hostname=hs.example.com:8889
 ralf_hostname=ralf.example.com:10888
 xdms_hostname=homer.example.com:7888
-                                                                                               
+
 # Email server configuration
 smtp_smarthost=localhost
 smtp_username=username
 smtp_password=password
 email_recovery_sender=clearwater@example.org
-                                                                                                                                                                                                       
+
 # Keys
 signup_key=secret
 turn_workaround=secret
 ellis_api_key=secret
 ellis_cookie_key=secret
+
+upstream_hostname=scscf.\$sprout_hostname
+upstream_port=5054
+
 EOF'
 
 sudo -E /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-sudo -E /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
-
-# Allocate a allocate a pool of numbers to assign to users.
-sudo /usr/share/clearwater/ellis/env/bin/python /usr/share/clearwater/ellis/src/metaswitch/ellis/tools/create_numbers.py --start 6505550000 --count 1000
+#sudo -E /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config --sync
 
 ctx logger info "before updating DNS ${dns_ip}"
 
@@ -73,3 +74,10 @@ do
   sleep 5
 done
 
+sudo service clearwater-infrastructure restart
+sudo service ellis stop
+
+sleep 40
+
+# Allocate a allocate a pool of numbers to assign to users.
+sudo /usr/share/clearwater/ellis/env/bin/python /usr/share/clearwater/ellis/src/metaswitch/ellis/tools/create_numbers.py --start 6505550000 --count 1000
