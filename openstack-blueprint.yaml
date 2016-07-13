@@ -1,11 +1,11 @@
-tosca_definitions_version: cloudify_dsl_1_2
+tosca_definitions_version: cloudify_dsl_1_3
 
 ########################################################
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.3.1/plugin.yaml
-  - http://www.getcloudify.org/spec/diamond-plugin/1.3.1/plugin.yaml
+  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.4/plugin.yaml
+  - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
 
 ########################################################
 
@@ -15,6 +15,7 @@ plugins:
         source: dns-plugin
 
 ########################################################
+
 relationships:
     dns_client_uses_dns_server:
        derived_from: cloudify.relationships.connected_to
@@ -43,21 +44,26 @@ node_types:
 ########################################################
 
 inputs:
+
+    manager_resource_prefix:
+      default: ''
+
     cloudify_agent:
         default:  'ubuntu'
 
     server_image:
-        default: 05bb3a46-ca32-4032-bedd-8d7ebd5c8100 # Ubuntu Server 14.04
+        default: 6c3047c6-17b1-4aaf-a657-9229bb481e50 # Ubuntu 14.04 Server
 
     server_flavor_name:
-        default: '2x2'
+        default: 'dc1.1x2.20' # 1 CPU 2 GB RAM
 
-    server_security_groups:
-        default: ['All_ports_open']
+    subnet_cidr:
+        default: 172.16.0.0/16
 
 ########################################################
 
 node_templates:
+
     a_node:
         type: cloudify.nodes.Compute
         properties:
@@ -77,44 +83,220 @@ node_templates:
               - bono_vm
               - sprout_vm
 
+    all_nodes_external:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: All Clearwater Nodes External
+            rules:
+                - remote_ip_prefix: 0.0.0.0/0
+                  port_range_min: 0
+                  port_range_max: 8
+                  protocol: icmp
+
+    all_nodes_internal:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: All Clearwater Nodes Internal
+            rules:
+                - remote_ip_prefix: { get_input: subnet_cidr }
+                  protocol: null
+                  port: null
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ all_nodes_external, security_group, name ] } ] }
+                  port_range_min: 161
+                  port_range_max: 162
+                  protocol: udp
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ all_nodes_external, security_group, name ] } ] }
+                  port: 2380
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ all_nodes_external, security_group, name ] } ] }
+                  port: 4000
+        relationships:
+            -    type: cloudify.relationships.depends_on
+                 target: all_nodes_external
+
+    ellis_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Ellis VM Security Group
+            rules:
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 80
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 443
+
+    bono_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Bono VM Security Group
+            rules:
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 3478
+                  protocol: tcp
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 3478
+                  protocol: udp
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 5060
+                  protocol: tcp
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 5060
+                  protocol: udp
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 5062
+                - remote_ip_prefix: 0.0.0.0/0
+                  port_range_min: 32768
+                  port_range_max: 65535
+                  protocol: udp
+
+    bono_to_others_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Bono to Others VM Security Group
+            rules:
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ bono_vm_security_group, security_group, name ] } ] }
+                  port: 5058
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 5058
+        relationships:
+            -    type: cloudify.relationships.depends_on
+                 target: bono_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: sprout_vm_security_group
+
+    sprout_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Sprout VM Security Group
+            rules:
+                - remote_ip_prefix: 0.0.0.0/0
+                  port: 443
+
+    sprout_to_others_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Sprout to Others VM Security Group
+            rules:
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ bono_vm_security_group, security_group, name ] } ] }
+                  port: 5052
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ bono_vm_security_group, security_group, name ] } ] }
+                  port: 5054
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 7000
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 7253
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 9160
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 11211
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ homestead_vm_security_group, security_group, name ] } ] }
+                  port: 9888
+        relationships:
+            -    type: cloudify.relationships.depends_on
+                 target: bono_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: sprout_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: homestead_vm_security_group
+
+    homestead_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Homestead VM Security Group
+
+    homestead_to_others_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Homestead to Others VM Security Group
+            rules:
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ homestead_vm_security_group, security_group, name ] } ] }
+                  port: 7000
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 8888
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ ellis_vm_security_group, security_group, name ] } ] }
+                  port: 8888
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ ellis_vm_security_group, security_group, name ] } ] }
+                  port: 8889
+        relationships:
+            -    type: cloudify.relationships.depends_on
+                 target: sprout_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: ellis_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: homestead_vm_security_group
+
+    homer_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Homer VM Security Group
+
+    homer_to_others_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Homer to Others VM Security Group
+            rules:
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ homer_vm_security_group, security_group, name ] } ] }
+                  port: 7000
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 7888
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ ellis_vm_security_group, security_group, name ] } ] }
+                  port: 7888
+        relationships:
+            -    type: cloudify.relationships.depends_on
+                 target: sprout_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: ellis_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: homer_vm_security_group
+
+    ralf_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Ralf VM Security Group
+
+    ralf_to_others_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: Ralf to Others VM Security Group
+            rules:
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ ralf_vm_security_group, security_group, name ] } ] }
+                  port: 7253
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ sprout_vm_security_group, security_group, name ] } ] }
+                  port: 10888
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ bono_vm_security_group, security_group, name ] } ] }
+                  port: 10888
+                - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ ralf_vm_security_group, security_group, name ] } ] }
+                  port: 11211
+        relationships:
+            -    type: cloudify.relationships.depends_on
+                 target: sprout_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: bono_vm_security_group
+            -    type: cloudify.relationships.depends_on
+                 target: ralf_vm_security_group
+
+    dns_vm_security_group:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: DNS VM Security Group
+
     bono_ip:
         type: cloudify.openstack.nodes.FloatingIP
+
     ellis_ip:
         type: cloudify.openstack.nodes.FloatingIP
-
-
-    bono_vm:
-        type: cloudify.openstack.nodes.Server
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
-        relationships:
-            -   type: cloudify.openstack.server_connected_to_floating_ip
-                target: bono_ip
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
-
-        interfaces:
-            cloudify.interfaces.monitoring_agent:
-               install:
-                  implementation: diamond.diamond_agent.tasks.install
-                  inputs:
-                     diamond_config:
-                        interval: 5
-               start: diamond.diamond_agent.tasks.start
-               stop: diamond.diamond_agent.tasks.stop
-               uninstall: diamond.diamond_agent.tasks.uninstall
-
-            cloudify.interfaces.monitoring:
-               start:
-                  implementation: diamond.diamond_agent.tasks.add_collectors
-                  inputs:
-                     collectors_config:
-                           CPUCollector: {}
 
     ellis_vm:
         type: cloudify.openstack.nodes.Server
@@ -124,12 +306,51 @@ node_templates:
             server:
                 image: { get_input: server_image }
                 flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ellis_ip
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: ellis_vm_security_group
+
+    bono_vm:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: bono_ip
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: bono_vm_security_group
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: bono_to_others_security_group
+        interfaces:
+            cloudify.interfaces.monitoring_agent:
+               install:
+                  implementation: diamond.diamond_agent.tasks.install
+                  inputs:
+                     diamond_config:
+                        interval: 5
+               start: diamond.diamond_agent.tasks.start
+               stop: diamond.diamond_agent.tasks.stop
+               uninstall: diamond.diamond_agent.tasks.uninstall
+            cloudify.interfaces.monitoring:
+               start:
+                  implementation: diamond.diamond_agent.tasks.add_collectors
+                  inputs:
+                     collectors_config:
+                           CPUCollector: {}
 
     sprout_vm:
         type: cloudify.openstack.nodes.Server
@@ -139,10 +360,15 @@ node_templates:
             server:
                 image: { get_input: server_image }
                 flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
         relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: sprout_vm_security_group
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: sprout_to_others_security_group
 
         interfaces:
             cloudify.interfaces.monitoring_agent:
@@ -161,19 +387,6 @@ node_templates:
                   inputs:
                      collectors_config:
                            CPUCollector: {}
-    homer_vm:
-        type: cloudify.openstack.nodes.Server
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            server:
-                image: { get_input: server_image }
-                flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
-        relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
-
 
     homestead_vm:
         type: cloudify.openstack.nodes.Server
@@ -183,11 +396,33 @@ node_templates:
             server:
                 image: { get_input: server_image }
                 flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
         relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: homestead_vm_security_group
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: homestead_to_others_security_group
 
+    homer_vm:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            cloudify_agent:
+                user: { get_input: cloudify_agent }
+            server:
+                image: { get_input: server_image }
+                flavor_name: { get_input: server_flavor_name }
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: homer_vm_security_group
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: homer_to_others_security_group
 
     ralf_vm:
         type: cloudify.openstack.nodes.Server
@@ -197,10 +432,15 @@ node_templates:
             server:
                 image: { get_input: server_image }
                 flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
         relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: ralf_vm_security_group
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: ralf_to_others_security_group
 
     dns_vm:
         type: cloudify.openstack.nodes.Server
@@ -210,25 +450,14 @@ node_templates:
             server:
                 image: { get_input: server_image }
                 flavor_name: { get_input: server_flavor_name }
-                security_groups: { get_input: server_security_groups }
         relationships:
-            -   type: cloudify.relationships.depends_on
-                target: All_ports_open
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_internal
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: all_nodes_external
+            -   type: cloudify.openstack.server_connected_to_security_group
+                target: dns_vm_security_group
 
-    All_ports_open:
-        type: cloudify.openstack.nodes.SecurityGroup
-        properties:
-            security_group:
-                name: All_ports_open
-            rules:
-                - remote_ip_prefix: 0.0.0.0/0
-                  port_range_min: 1
-                  port_range_max: 65535
-                  protocol: tcp
-                - remote_ip_prefix: 0.0.0.0/0
-                  port_range_min: 1
-                  port_range_max: 65535
-                  protocol: udp
 
 ########################################################
     bono_app:
