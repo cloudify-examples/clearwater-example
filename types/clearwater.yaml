@@ -74,3 +74,11 @@ node_types:
         configure: scripts/clearwater/ellis/install-ellis.sh
         stop: scripts/clearwater/ellis/stop-ellis.sh
         delete: scripts/clearwater/other/remove-cluster-node.sh
+
+  clearwater.nodes.stress-test:
+    derived_from: clearwater.nodes.config
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/clearwater/ellis/install-ellis.sh
+        stop: scripts/clearwater/ellis/stop-ellis.sh
+        delete: scripts/clearwater/other/remove-cluster-node.sh

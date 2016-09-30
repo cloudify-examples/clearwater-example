@@ -256,6 +256,8 @@ node_templates:
     ellis_ip:
         type: cloudify.openstack.nodes.FloatingIP
 
+
+##########################################################################
     ellis_vm:
         type: clearwater.nodes.MonitoredServer
         properties:
