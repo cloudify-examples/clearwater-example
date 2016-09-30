@@ -76,9 +76,36 @@ node_types:
         delete: scripts/clearwater/other/remove-cluster-node.sh
 
   clearwater.nodes.stress-test:
-    derived_from: clearwater.nodes.config
+    derived_from: cloudify.nodes.SoftwareComponent
     interfaces:
       cloudify.interfaces.lifecycle:
-        configure: scripts/clearwater/ellis/install-ellis.sh
-        stop: scripts/clearwater/ellis/stop-ellis.sh
-        delete: scripts/clearwater/other/remove-cluster-node.sh
+        configure: scripts/clearwater/stress-test/install-stress-test.sh
+        stop: scripts/clearwater/stress-test/stop-stress-test.sh
+
+  clearwater.nodes.bulknumber.homestead:
+    derived_from: cloudify.nodes.SoftwareComponent
+    properties:
+      name:
+        type: string
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/clearwater/stress-test/bulk-provisioning-numbers-homestead.sh
+        inputs:
+          name:
+            default: { get_property: [SELF, name]}
+
+  clearwater.nodes.bulknumber.homer:
+    derived_from: cloudify.nodes.SoftwareComponent
+    properties:
+      homestead_ip:
+        type: string
+      name:
+        type: string
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: scripts/clearwater/stress-test/bulk-provisioning-numbers-homer.sh
+        inputs:
+          homestead_ip:
+            default: { get_property: [SELF, homestead_ip]}
+          name:
+            default: { get_property: [SELF, name]}
