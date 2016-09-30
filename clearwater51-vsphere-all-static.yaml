@@ -300,7 +300,7 @@ node_templates:
             -  type: app_connected_to_bind
                target: bind
 
-    homestea:
+    homestead:
         type: clearwater.nodes.homestead
         properties:
             private_domain: { get_input: private_domain }

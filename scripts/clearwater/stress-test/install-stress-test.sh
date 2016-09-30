@@ -10,6 +10,11 @@ if [ ! -f /etc/apt/sources.list.d/clearwater.list ]
 fi
 sudo apt-get update
 
+ctx logger info ""
+
+sudo /etc/clearwater/local_config
+
+
 ctx logger info "Installing stress test package"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-sip-stress --yes --force-yes -o DPkg::options::=--force-confnew
 ctx logger info "The installation packages is done correctly"

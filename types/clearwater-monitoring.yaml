@@ -32,6 +32,8 @@ relationships:
                 1.2.826.0.1.1578918.9.3.11.1.2.1: sprout.De.Registration.Attempts
                 1.2.826.0.1.1578918.9.3.11.1.3.1: sprout.De.Registration.Successes
                 1.2.826.0.1.1578918.9.3.11.1.4.1: sprout.De.Registration.Failures
+            path_suffix:
+              default: cpu
   monitors_bono_nodes:
     derived_from: cloudify.relationships.monitors
     source_interfaces:
@@ -55,6 +57,8 @@ relationships:
                 1.2.826.0.1.1578918.9.2.4.1.2.1: bono.Incoming.Requests.Count
                 1.2.826.0.1.1578918.9.2.5.1.2.1: bono.Rejected.Overload.Count
                 1.2.826.0.1.1578918.9.2.6.1.2.1: bono.Queue.Size.Average
+            path_suffix:
+              default: cpu
   monitors_ralf_nodes:
     derived_from: cloudify.relationships.monitors
     source_interfaces:
@@ -78,6 +82,8 @@ relationships:
                 1.2.826.0.1.1578918.9.2.4.1.2.1: bono.Incoming.Requests.Count
                 1.2.826.0.1.1578918.9.2.5.1.2.1: bono.Rejected.Overload.Count
                 1.2.826.0.1.1578918.9.2.6.1.2.1: bono.Queue.Size.Average
+            path_suffix:
+              default: cpu
   monitors_homestead_nodes:
     derived_from: cloudify.relationships.monitors
     source_interfaces:
@@ -101,3 +107,5 @@ relationships:
                 1.2.826.0.1.1578918.9.2.4.1.2.1: bono.Incoming.Requests.Count
                 1.2.826.0.1.1578918.9.2.5.1.2.1: bono.Rejected.Overload.Count
                 1.2.826.0.1.1578918.9.2.6.1.2.1: bono.Queue.Size.Average
+            path_suffix:
+              default: cpu
