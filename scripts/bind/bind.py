@@ -127,6 +127,8 @@ def install(subject=None):
         host_ip=subject.instance.host_ip,
         etcd_ip=subject.instance.host_ip))
 
+    if not config.get('public_ip'):
+        config['public_ip'] = subject.instance.host_ip
     ctx.logger.debug('Rendering the Jinja2 template to {0}.'.format(CONFIG_PATH_LOCAL_CONF))
     ctx.logger.debug('The config dict: {0}.'.format(config))
 
