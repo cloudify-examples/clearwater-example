@@ -249,6 +249,12 @@ node_templates:
         properties:
             security_group:
                 name: DNS VM Security Group
+            rules:
+              - remote_ip_prefix: 0.0.0.0/0
+                port: 53
+                protocol: udp
+              - remote_ip_prefix: 0.0.0.0/0
+                port: 53
 
     bono_ip:
         type: cloudify.openstack.nodes.FloatingIP
@@ -348,6 +354,7 @@ node_templates:
             -   type: cloudify.openstack.server_connected_to_security_group
                 target: bind_host_security_group
 
+
     proxy_node:
       type: SNMPManagerProxy
       relationships:
@@ -373,7 +380,7 @@ node_templates:
         relationships:
             -  type: cloudify.relationships.contained_in
                target: ellis_vm
-            -  type: app_connected_to_bind
+            -  type: app_connected_to_bind_ellis
                target: bind
 
     ralf:

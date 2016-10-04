@@ -52,6 +52,8 @@ def configure(subject=None):
             for elements in element.target.instance.relationships:
                 if elements.type == 'cloudify.openstack.server_connected_to_floating_ip':
                     public_ip = elements.target.instance.runtime_properties['floating_ip_address']
+    if not public_ip:
+        public_ip = subject.instance.host_ip
 
     ctx.logger.info('Creating private domain file')
 
@@ -192,7 +194,7 @@ def add_backend(backend_address=None):
         backends[role][ctx.source.instance.id] = {
             'private_address': backend_address or ctx.source.instance.host_ip,
             'name': name.replace('_','-'),
-            'public_address' : public_ip
+            'public_address' : public_ip or backend_address or ctx.source.instance.host_ip
         }
 
 # remove entre on the DNS domains
