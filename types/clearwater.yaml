@@ -77,35 +77,94 @@ node_types:
 
   clearwater.nodes.stress-test:
     derived_from: cloudify.nodes.SoftwareComponent
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        configure: scripts/clearwater/stress-test/install-stress-test.sh
-        stop: scripts/clearwater/stress-test/stop-stress-test.sh
-
-  clearwater.nodes.bulknumber.homestead:
-    derived_from: cloudify.nodes.SoftwareComponent
     properties:
-      name:
+      home_domain:
+        type: string
+      bono_servers:
+        type: string
+      number_of_subscribers:
+        type: integer
+      homestead_ip:
         type: string
     interfaces:
       cloudify.interfaces.lifecycle:
-        create: scripts/clearwater/stress-test/bulk-provisioning-numbers-homestead.sh
-        inputs:
-          name:
-            default: { get_property: [SELF, name]}
+        configure:
+          implementation: scripts/clearwater/stress-test/install-stress-test.sh
+          inputs:
+            homestead_ip:
+              default: { get_property: [SELF, homestead_ip] }
+            home_domain:
+              default: { get_property: [SELF, home_domain]}
+            bono_servers:
+              default: { get_property: [SELF, bono_servers]}
+            number_of_subscribers:
+              default: { get_property: [SELF, number_of_subscribers]}
+        stop: scripts/clearwater/stress-test/stop-stress-test.sh
+
+  clearwater.nodes.bulknumber.homestead:
+    derived_from: cloudify.nodes.Compute
+    properties:
+      agent_config:
+        default:
+          install_method: none
+      name:
+        type: string
+      home_domain:
+        type: string
+      ssh_user:
+        type: string
+      ssh_key:
+        type: string
+      homestead_ip:
+        type: string
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path:
+              default: scripts/clearwater/stress-test/bulk-provisioning-numbers-homestead.sh
+            name:
+              default: { get_property: [SELF, name]}
+            home_domain:
+              default: { get_property: [SELF, home_domain]}
+            fabric_env:
+              default:
+                user: { get_property: [SELF, ssh_user] }
+                key_filename: { get_property: [SELF, ssh_key] }
+                host_string: { get_property: [SELF, homestead_ip] }
+                always_use_pty: true
 
   clearwater.nodes.bulknumber.homer:
-    derived_from: cloudify.nodes.SoftwareComponent
+    derived_from: cloudify.nodes.Compute
     properties:
+      agent_config:
+        default:
+          install_method: none
       homestead_ip:
         type: string
       name:
         type: string
+      ssh_key:
+        type: string
+      ssh_user:
+        type: string
+      homer_ip:
+        type: string
     interfaces:
       cloudify.interfaces.lifecycle:
-        create: scripts/clearwater/stress-test/bulk-provisioning-numbers-homer.sh
-        inputs:
-          homestead_ip:
-            default: { get_property: [SELF, homestead_ip]}
-          name:
-            default: { get_property: [SELF, name]}
+        create:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path:
+              default: scripts/clearwater/stress-test/bulk-provisioning-numbers-homer.sh
+            homestead_ip:
+              default: { get_property: [SELF, homestead_ip]}
+            name:
+              default: { get_property: [SELF, name]}
+            fabric_env:
+              default:
+                user: { get_property: [SELF, ssh_user] }
+                key_filename: { get_property: [SELF, ssh_key] }
+                host_string: { get_property: [SELF, homer_ip] }
+                always_use_pty: true
