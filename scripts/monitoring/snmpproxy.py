@@ -16,6 +16,16 @@ class SNMPProxyCollector(SNMPRawCollector):
             'Collecting raw SNMP statistics from device \'{0}\''.format(device)
         )
 
+        try:
+            self.skip_time
+        except:
+            self.skip_time = time.time()
+
+        time_diff = time.time() - self.skip_time
+        if (time_diff) > 30:
+            self.skip_list[:] = []
+            self.skip_time = time.time()
+
         dev_config = self.config['devices'][device]
         if 'oids' in dev_config:
             for oid, metricName in dev_config['oids'].items():

@@ -66,6 +66,3 @@ relationships:
               description: the community
             oids:
               description: the oids to poll
-            path_suffix:
-              default: cpu
-              description: temporary hack for charts
