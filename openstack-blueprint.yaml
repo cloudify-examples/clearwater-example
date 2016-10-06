@@ -362,6 +362,10 @@ node_templates:
           target: bono
         - type: monitors_sprout_nodes
           target: sprout
+        - type: monitors_ralf_nodes
+          target: ralf
+        - type: monitors_homestead_nodes
+          target: homestead
 ########################################################
     bono:
         type: clearwater.nodes.bono

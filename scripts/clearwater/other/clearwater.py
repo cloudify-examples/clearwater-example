@@ -54,6 +54,8 @@ def configure(subject=None):
                 if elements.type == 'cloudify.openstack.server_connected_to_floating_ip':
                     public_ip = elements.target.instance.runtime_properties['floating_ip_address']
 
+    if not public_ip and subject.instance.runtime_properties['public_ip']:
+        public_ip = subject.instance.runtime_properties['public_ip']
     # Get bind host IP
     binds = []
     for element in relationships:
