@@ -76,7 +76,7 @@ node_types:
         delete: scripts/clearwater/other/remove-cluster-node.sh
 
   clearwater.nodes.stress-test:
-    derived_from: clearwater.nodes.config
+    derived_from: cloudify.nodes.SoftwareComponent
     properties:
       public_domain:
         type: string
