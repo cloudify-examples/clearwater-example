@@ -268,8 +268,20 @@ node_templates:
                       network: { get_input: network_ip }
             connection_config: *connection_config
 
+    proxy_node:
+      type: SNMPManagerProxy
+      relationships:
+        - type: monitors_bono_nodes
+          target: bono
+        - type: monitors_sprout_nodes
+          target: sprout
+        - type: monitors_ralf_nodes
+          target: ralf
+        - type: monitors_homestead_nodes
+          target: homestead
+
 ########################################################
-########################################################
+
     bono:
         type: clearwater.nodes.bono
         properties:
@@ -340,17 +352,6 @@ node_templates:
             -  type: cloudify.relationships.contained_in
                target: bind_host
 
-    proxy_node:
-      type: SNMPManagerProxy
-      relationships:
-        - type: monitors_bono_nodes
-          target: bono
-        - type: monitors_sprout_nodes
-          target: sprout
-        - type: monitors_ralf_nodes
-          target: ralf
-        - type: monitors_homestead_nodes
-          target: homestead
 ########################################################
 
 outputs:
