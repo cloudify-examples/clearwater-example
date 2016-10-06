@@ -91,6 +91,8 @@ node_types:
         configure:
           implementation: scripts/clearwater/stress-test/install-stress-test.sh
           inputs:
+            host_ip:
+              default: { get_property: [SELF, host_ip] }
             homestead_ip:
               default: { get_property: [SELF, homestead_ip] }
             public_domain:

@@ -29,6 +29,9 @@ inputs:
   home_domain:
     description: home domain of Clearwater installation
 
+  private_domain:
+    description: private domain of Clearwater installation
+
   name:
     description: name of users files (without extension)
     default: users
@@ -47,10 +50,10 @@ node_templates:
   stress_test:
     type: clearwater.nodes.stress-test
     properties:
+      public_domain: { get_input: home_domain }
       homestead_ip: { get_input: homestead_ip }
       bono_servers: { get_input: bono_servers }
       number_of_subscribers: { get_input: number_of_subscribers }
-      home_domain: { get_input: home_domain }
     relationships:
       - type: cloudify.relationships.contained_in
         target: stress_test_host
@@ -72,6 +75,7 @@ node_templates:
     type: clearwater.nodes.bulknumber.homestead
     properties:
       name: { get_input: name }
+      number_of_subscribers: { get_input: number_of_subscribers }
       home_domain: { get_input: home_domain }
       ssh_user: { get_input: agent_user }
       ssh_key: { get_input: agent_key }

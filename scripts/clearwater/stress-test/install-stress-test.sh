@@ -13,13 +13,13 @@ ctx logger info "APT updated"
 sudo mkdir -p /etc/clearwater
 
 sudo tee -a /etc/clearwater/local_config << EOF
-local_ip=${homestead_ip}
+local_ip=${host_ip}
 EOF
 ctx logger info "Created local_config"
 
 sudo tee -a /etc/clearwater/shared_config << EOF
 home_domain=${public_domain}
-bono_servers=[${bono_servers}]
+bono_servers=${bono_servers}
 count=${number_of_subscribers}
 EOF
 ctx logger info "Created shared_config"
