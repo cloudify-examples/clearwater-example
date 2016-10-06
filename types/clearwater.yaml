@@ -76,9 +76,9 @@ node_types:
         delete: scripts/clearwater/other/remove-cluster-node.sh
 
   clearwater.nodes.stress-test:
-    derived_from: cloudify.nodes.SoftwareComponent
+    derived_from: clearwater.nodes.config
     properties:
-      home_domain:
+      public_domain:
         type: string
       bono_servers:
         type: string
@@ -93,8 +93,8 @@ node_types:
           inputs:
             homestead_ip:
               default: { get_property: [SELF, homestead_ip] }
-            home_domain:
-              default: { get_property: [SELF, home_domain]}
+            public_domain:
+              default: { get_property: [SELF, public_domain]}
             bono_servers:
               default: { get_property: [SELF, bono_servers]}
             number_of_subscribers:
@@ -117,6 +117,8 @@ node_types:
         type: string
       homestead_ip:
         type: string
+      number_of_subscribers:
+        type: integer
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
@@ -128,6 +130,8 @@ node_types:
               default: { get_property: [SELF, name]}
             home_domain:
               default: { get_property: [SELF, home_domain]}
+            number_of_subscribers:
+              default: { get_property: [SELF, number_of_subscribers]}
             fabric_env:
               default:
                 user: { get_property: [SELF, ssh_user] }
