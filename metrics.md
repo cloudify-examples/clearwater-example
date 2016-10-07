@@ -4,6 +4,7 @@ Metrics are gathered by diamond agent installed on each node and put into cloudi
  
 ## Cloudify RabbitMQ 
 ###RabbitMQ connection details:
+Name | Value
 --- | ---
 **IP**: | Cloudify Manager IP 
 **user**: | cloudify
@@ -13,19 +14,11 @@ Metrics are gathered by diamond agent installed on each node and put into cloudi
 
 ###Message format:
 ```
-{<deployment id>.<node name>.<node id>.<name>_<path>: [<metric>, <unit>, <type>]}
+{"metric": <value>, "host": <host node id>, "node_id": <host node instance id>, "path": <path of the metric>, "node_name": <node instance id>, "time": <unix timestamp>, "deployment_id": <deployment id>, "type": <metric type>}
 ```
 ####Example:
 ```
-{'opnfv-cloudify-clearwater.ralf_host.ralf_host_b9bc3.iostat_vda1_iops': [(18.739529070907434, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.ralf_host.ralf_host_b9bc3.iostat_vda1_io': [(97.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.sprout_6e1d8.sprout_6e1d8.snmp_sprout_Initial_Registration_Successes': [(0.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.bind_host.bind_host_7350e.network_eth0_rx_errors': [(0.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.sprout_6e1d8.sprout_6e1d8.snmp_sprout_Re_Registration_Successes': [(0.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.sprout_b0516.sprout_b0516.snmp_sprout_De_Registration_Successes': [(0.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.sprout_d7687.sprout_d7687.snmp_sprout_Initial_Registration_Attempts': [(0.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.bind_host.bind_host_7350e.cpu_total_steal': [(0.0, u'', u'GAUGE')], 
-'opnfv-cloudify-clearwater.sprout_b0516.sprout_b0516.snmp_sprout_Re_Registration_Successes': [(0.0, u'', u'GAUGE')]}
+{"metric": 0.0, "host": "sprout_vm", "node_id": "sprout_vm_78e3e", "path": "sproutDeRegistrationAttempts_scopePrevious5MinutePeriod", "unit": "", "name": "snmp", "service": "clearwater-nfv-blueprint.sprout_vm_78e3e.sprout_vm_78e3e.snmp.sproutDeRegistrationAttempts.scopePrevious5MinutePeriod", "node_name": "sprout_vm_78e3e", "time": 1475859236, "deployment_id": "clearwater-nfv-blueprint", "type": "GAUGE"}
 ```
 
 ## SNMP metrics
