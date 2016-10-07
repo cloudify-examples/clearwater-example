@@ -1,5 +1,11 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
+
+############################################################
+# This blueprint is an automated sip stress test described:
+# http://clearwater.readthedocs.io/en/stable/Clearwater_stress_testing.html
+############################################################
+
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
   - http://www.getcloudify.org/spec/vsphere-plugin/2.0/plugin.yaml
@@ -89,13 +95,12 @@ node_templates:
     type: cloudify.vsphere.nodes.Server
     properties:
       cloudify_agent:
-        default:
-          user: { get_input: agent_user }
-          key: { get_input: agent_key }
+        user: { get_input: agent_user }
+        key: { get_input: agent_key }
       server:
-          template: { get_input: template_name }
-          cpus: { get_input: vm_cpu }
-          memory: { get_input: vm_memory }
+        template: { get_input: template_name }
+        cpus: { get_input: vm_cpu }
+        memory: { get_input: vm_memory }
       networking:
           dns_servers: { get_input: dns_servers }
           connect_networks:

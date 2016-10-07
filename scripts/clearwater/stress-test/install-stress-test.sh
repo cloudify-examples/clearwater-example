@@ -13,7 +13,7 @@ ctx logger info "APT updated"
 sudo mkdir -p /etc/clearwater
 
 sudo tee -a /etc/clearwater/local_config << EOF
-local_ip=${host_ip}
+local_ip=$(ip -4 addr show dev eth0 | grep -E '^[[:space:]]*inet' | xargs | awk '{print $2}' | cut -d/ -f1)
 EOF
 ctx logger info "Created local_config"
 

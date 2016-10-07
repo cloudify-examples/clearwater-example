@@ -1,5 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
+############################################################
+# This blueprint is an automated sip stress test described:
+# http://clearwater.readthedocs.io/en/stable/Clearwater_stress_testing.html
+############################################################
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.5/plugin.yaml

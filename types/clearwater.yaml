@@ -91,8 +91,6 @@ node_types:
         configure:
           implementation: scripts/clearwater/stress-test/install-stress-test.sh
           inputs:
-            host_ip:
-              default: { get_attribute: [SELF, host_ip] }
             homestead_ip:
               default: { get_property: [SELF, homestead_ip] }
             public_domain:
@@ -140,6 +138,19 @@ node_types:
                 key_filename: { get_property: [SELF, ssh_key] }
                 host_string: { get_property: [SELF, homestead_ip] }
                 always_use_pty: true
+        delete:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            scripts_path:
+              default: scripts/clearwater/stress-test/uninstall.sh
+            name:
+              default: { get_property: [SELF, name]}
+            fabric_env:
+              default:
+                user: { get_property: [SELF, ssh_user] }
+                key_filename: { get_property: [SELF, ssh_key] }
+                host_string: { get_property: [SELF, homestead_ip] }
+                always_use_pty: true
 
   clearwater.nodes.bulknumber.homer:
     derived_from: cloudify.nodes.Compute
@@ -166,6 +177,19 @@ node_types:
               default: scripts/clearwater/stress-test/bulk-provisioning-numbers-homer.sh
             homestead_ip:
               default: { get_property: [SELF, homestead_ip]}
+            name:
+              default: { get_property: [SELF, name]}
+            fabric_env:
+              default:
+                user: { get_property: [SELF, ssh_user] }
+                key_filename: { get_property: [SELF, ssh_key] }
+                host_string: { get_property: [SELF, homer_ip] }
+                always_use_pty: true
+        delete:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            scripts_path:
+              default: scripts/clearwater/stress-test/uninstall.sh
             name:
               default: { get_property: [SELF, name]}
             fabric_env:
