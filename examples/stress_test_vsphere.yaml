@@ -58,7 +58,7 @@ inputs:
     description: >
       Template to clone VMs from
   vm_cpu:
-    default: 1
+    default: 2
   vm_memory:
     default: 2048
   switch_distributed:
@@ -91,9 +91,8 @@ node_templates:
       cloudify_agent:
         default:
           user: { get_input: agent_user }
-          key: { get_input: agent_key_file }
+          key: { get_input: agent_key }
       server:
-        default:
           template: { get_input: template_name }
           cpus: { get_input: vm_cpu }
           memory: { get_input: vm_memory }
@@ -109,15 +108,6 @@ node_templates:
                 gateway: { get_input: gateway_ip }
                 network: { get_input: network_ip }
       connection_config: *connection_config
-
-  stress_test_host:
-    type: cloudify.openstack.nodes.Server
-    properties:
-      cloudify_agent:
-       user: ubuntu
-      server:
-        image: 6c3047c6-17b1-4aaf-a657-9229bb481e50 # Ubuntu Server 14.04.1 LTS
-        flavor: 05a9e6d1-d29f-4e98-9eab-51c9a6beed44
 
   stress_test:
     type: clearwater.nodes.stress-test
