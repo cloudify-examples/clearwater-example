@@ -141,10 +141,10 @@ node_types:
         delete:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
-            scripts_path:
+            script_path:
               default: scripts/clearwater/stress-test/uninstall.sh
             name:
-              default: { get_property: [SELF, name]}
+              default: { get_property: [SELF, name] }
             fabric_env:
               default:
                 user: { get_property: [SELF, ssh_user] }
@@ -188,7 +188,7 @@ node_types:
         delete:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
-            scripts_path:
+            script_path:
               default: scripts/clearwater/stress-test/uninstall.sh
             name:
               default: { get_property: [SELF, name]}
