@@ -52,19 +52,13 @@ inputs:
     type: boolean
     default: false
   dns_servers:
-    default:
-  agent_user:
-    default:  'ubuntu'
-      description: >
-        User for connecting to application VMs
-  agent_key_file:
-    default: '~/.ssh/agent.pem'
+    default: ""
   template_name:
     default: "ubuntu-14.04.5-x86_64-tmpl"
-      description: >
-        Template to clone VMs from
+    description: >
+      Template to clone VMs from
   vm_cpu:
-    default: 2
+    default: 1
   vm_memory:
     default: 2048
   switch_distributed:
