@@ -9,16 +9,13 @@
 # which accompanies this distribution, and is available at
 # http://www.apache.org/licenses/LICENSE-2.0
 ########################################################################
-
-import os
-import subprocess
+import commands
 import tempfile
 import re
-from contextlib import contextmanager
+
 
 from jinja2 import Template
 
-from cloudify_rest_client import exceptions as rest_exceptions
 from cloudify import ctx
 from cloudify.state import ctx_parameters as inputs
 from cloudify import exceptions
@@ -40,6 +37,10 @@ def configure(subject=None):
 
     ctx.logger.info('Configuring clearwater node.')
     template = Template(ctx.get_resource(TEMPLATE_RESOURCE_NAME))
+    timezone = subject.node.properties.get('timezone')
+    if timezone:
+        ctx.logger.info('Set time zone: %s.' % timezone)
+        _run('sudo timedatectl set-timezone %s' % timezone, error_message='Cannot set time zone')
 
     ctx.logger.debug('Building a dict object that will contain variables '
                      'to write to the Jinja2 template.')
@@ -48,6 +49,7 @@ def configure(subject=None):
     name = ctx.instance.id
     relationships = ctx.instance.relationships
     public_ip = ''
+    host_ip = commands.getoutput("/sbin/ifconfig").split("\n")[1].split()[1][5:]
     for element in relationships:
         if element.type == 'cloudify.relationships.contained_in':
             for elements in element.target.instance.relationships:
@@ -66,10 +68,9 @@ def configure(subject=None):
     config = subject.node.properties.copy()
     config.update(dict(
         name=name.replace('_','-'),
-        host_ip=subject.instance.host_ip,
+        host_ip=host_ip,
         etcd_ip=binds[0],
         public_ip=public_ip))
-
 
     ctx.logger.debug('Rendering the Jinja2 template to {0}.'.format(CONFIG_PATH))
     ctx.logger.debug('The config dict: {0}.'.format(config))

@@ -17,6 +17,10 @@ node_types:
       private_domain:
         description: Private domain for clearwater internal load-balancing
         type: string
+      timezone:
+        description: Time zone to be set
+        type: string
+        default: America/Los_Angeles
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
@@ -25,6 +29,9 @@ node_types:
             invocation:
               default:
                 function: configure
+            args:
+              default:
+                timezone: { get_property: [SELF, timezone] }
 
   # Specific types for clearwater nodes (install role etc.)
   clearwater.nodes.sprout:
