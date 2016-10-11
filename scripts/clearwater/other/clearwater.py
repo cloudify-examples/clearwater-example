@@ -56,8 +56,6 @@ def configure(subject=None):
                 if elements.type == 'cloudify.openstack.server_connected_to_floating_ip':
                     public_ip = elements.target.instance.runtime_properties['floating_ip_address']
 
-    if not public_ip and subject.instance.runtime_properties.get('public_ip'):
-        public_ip = subject.instance.runtime_properties['public_ip']
     # Get bind host IP
     binds = []
     for element in relationships:
@@ -70,7 +68,7 @@ def configure(subject=None):
         name=name.replace('_','-'),
         host_ip=host_ip,
         etcd_ip=binds[0],
-        public_ip=public_ip))
+        public_ip=public_ip or host_ip))
 
     ctx.logger.debug('Rendering the Jinja2 template to {0}.'.format(CONFIG_PATH))
     ctx.logger.debug('The config dict: {0}.'.format(config))
