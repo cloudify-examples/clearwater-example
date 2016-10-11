@@ -58,6 +58,12 @@ inputs:
     agent_key_file:
         default: '~/.ssh/agent.pem'
 
+    agent_timezone:
+        default: "America/Los_Angeles"
+        description: >
+            Common timezone for the hosts to make sure metrics
+            are collected in the same timezone
+
     template_name:
         default: "ubuntu-14.04.5-x86_64-tmpl"
         description: >
@@ -285,6 +291,7 @@ node_templates:
     bono:
         type: clearwater.nodes.bono
         properties:
+          timezone: { get_input: agent_timezone }
           private_domain: { get_input: private_domain }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -295,6 +302,7 @@ node_templates:
     ellis:
         type: clearwater.nodes.ellis
         properties:
+            timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -305,6 +313,7 @@ node_templates:
     ralf:
         type: clearwater.nodes.ralf
         properties:
+            timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -315,6 +324,7 @@ node_templates:
     homestead:
         type: clearwater.nodes.homestead
         properties:
+            timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -325,6 +335,7 @@ node_templates:
     homer:
         type: clearwater.nodes.homer
         properties:
+            timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
             -  type: cloudify.relationships.contained_in
@@ -335,6 +346,7 @@ node_templates:
     sprout:
         type: clearwater.nodes.sprout
         properties:
+            timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
             -  type: cloudify.relationships.contained_in

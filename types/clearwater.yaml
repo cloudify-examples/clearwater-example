@@ -20,7 +20,7 @@ node_types:
       timezone:
         description: Time zone to be set
         type: string
-        default: America/Los_Angeles
+        default: ''
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
