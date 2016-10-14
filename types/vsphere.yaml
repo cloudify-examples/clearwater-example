@@ -12,6 +12,15 @@ node_types:
           template: { get_input: template_name }
           cpus: { get_input: vm_cpu }
           memory: { get_input: vm_memory }
+      networking:
+        default:
+          dns_servers: { get_input: dns_servers }
+          connect_networks:
+            - name: { get_input: network }
+              switch_distributed: { get_input: switch_distributed }
+              management: True
+              external: True
+              use_dhcp: True
     interfaces:
       cloudify.interfaces.monitoring_agent:
         install:
