@@ -1,11 +1,18 @@
 #!/bin/bash -e
 
 # Order doesn't matter here, as we don't start the services - we're just enabling them for reboot.
+
+#service_names=(nginx.service cloudify-webui.service cloudify-restservice.service cloudify-mgmtworker.service \
+#    cloudify-riemann.service cloudify-rabbitmq.service cloudify-influxdb.service elasticsearch.service \
+#    cloudify-amqpinflux.service logstash.service)
+
+# Remove cloudify-amqinflx.service - we moving monitoring metrics to infludb.
 service_names=(nginx.service cloudify-webui.service cloudify-restservice.service cloudify-mgmtworker.service \
     cloudify-riemann.service cloudify-rabbitmq.service cloudify-influxdb.service elasticsearch.service \
-    cloudify-amqpinflux.service logstash.service)
+    logstash.service)
 
 private_ip=$1
+manager_hostname=$2
 echo "Enabling services"
 for service in ${service_names[*]}
 do
@@ -13,8 +20,8 @@ do
     sudo systemctl enable $service
 done
 
-#echo "Adjusting hostname to ${manager_hostname}"
-#sudo hostnamectl set-hostname ${manager_hostname}
+echo "Adjusting hostname to ${manager_hostname}"
+sudo hostnamectl set-hostname ${manager_hostname}
 
 echo "Adjusting private IP to ${private_ip}"
 
