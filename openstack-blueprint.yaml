@@ -61,6 +61,15 @@ inputs:
     subnet_cidr:
         default: 172.16.0.0/16
 
+    openstack_floating_network_name:
+        default: 'external'
+
+    ellis_floating_ip:
+        default: ''
+
+    bono_floating_ip:
+        default: ''
+
 ########################################################
 
 node_templates:
@@ -293,11 +302,25 @@ node_templates:
             security_group:
                 name: DNS VM Security Group
 
-    bono_ip:
+    bono_ip:   
         type: cloudify.openstack.nodes.FloatingIP
-
+        interfaces:
+          cloudify.interfaces.lifecycle:
+            create:
+              inputs:
+                args:
+                  floating_network_name: { get_input: openstack_floating_network_name } 
+                  floating_ip_address: { get_input: bono_floating_ip }
+ 
     ellis_ip:
         type: cloudify.openstack.nodes.FloatingIP
+        interfaces:
+          cloudify.interfaces.lifecycle:
+            create:
+              inputs:
+                args:
+                  floating_network_name: { get_input: openstack_floating_network_name } 
+                  floating_ip_address: { get_input: ellis_floating_ip }
 
     ellis_vm:
         type: cloudify.openstack.nodes.Server
