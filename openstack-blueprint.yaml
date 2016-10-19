@@ -6,6 +6,7 @@ imports:
   - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.4/plugin.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
+  - cloudify-diamond-snmp-extension-master/snmp-types.yaml
 
 ########################################################
 
@@ -586,6 +587,31 @@ node_templates:
                    target: homer_app
                 -  type: cloudify.relationships.connected_to
                    target: homestead_app
+
+########################################################
+
+    snmpd_configuring_node:
+        type: SnmpdConfiguringNode
+        relationships:
+            - type: cloudify.relationships.contained_in
+              target: bono_vm
+
+    proxy_node:
+        type: SNMPProxy
+        relationships:
+            - type: cloudify.relationships.contained_in
+              target: bono_vm
+            - type: cloudify.relationships.depends_on
+              target: snmpd_configuring_node
+            - type: cloudify.relationships.monitors
+              target: bono_vm
+              source_interfaces:
+                cloudify.interfaces.relationship_lifecycle:
+                  preconfigure:
+                    inputs:
+                      oids:
+                        1.3.6.1.4.1.2021.10.1.3.1: total.system
+                        1.3.6.1.4.1.2021.10.1.3.2: total.user
 
 outputs:
   web:
