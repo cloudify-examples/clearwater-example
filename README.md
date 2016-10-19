@@ -1,3 +1,5 @@
+[![Build Status](https://circleci.com/gh/cloudify-examples/clearwater-nfv-blueprint.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cloudify-examples/clearwater-nfv-blueprint)
+
 # TOSCA Based Deployment and Monitoring of Clearwater vIMS
 
 This repository contains a [Cloudify](http://getcloudify.org) blueprint for deploying MetaSwitch Clearwater vIMS Cloudify, a TOSCA based VNF Orchestrator and policy engine.

@@ -22,7 +22,7 @@ dependencies:
 test:
   override:
     - cfy init
-    - cfy blueprints validate openstack-blueprint.yaml
+    - cfy blueprints validate -p openstack-blueprint.yaml
 
 deployment:
   release:
