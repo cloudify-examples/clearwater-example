@@ -44,6 +44,8 @@ node_types:
             invocation:
               default:
                 function: install
+            public_ip:
+              default: ''
         configure: scripts/clearwater/other/install-etcd.sh
 
 
@@ -61,6 +63,8 @@ relationships:
             invocation:
               default:
                 function: add_backend
+            public_ip:
+              default: ''
         unlink:
           implementation: scripts/bind/bind.py
           inputs:

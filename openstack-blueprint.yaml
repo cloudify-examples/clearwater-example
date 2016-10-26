@@ -371,21 +371,40 @@ node_templates:
         type: clearwater.nodes.bono
         properties:
           private_domain: { get_input: private_domain }
+        interfaces:
+          cloudify.interfaces.lifecycle:
+            create:
+              inputs:
+                public_ip: { get_attribute: [ bono_ip, floating_ip_address ] }
         relationships:
-            -  type: cloudify.relationships.contained_in
-               target: bono_vm
-            -  type: app_connected_to_bind
-               target: bind
-
+            - type: cloudify.relationships.contained_in
+              target: bono_vm
+            - type: app_connected_to_bind
+              target: bind
+              target_interfaces:
+                cloudify.interfaces.relationship_lifecycle:
+                  establish:
+                    inputs:
+                      public_ip: { get_attribute: [ bono_ip, floating_ip_address ] }
     ellis:
         type: clearwater.nodes.ellis
         properties:
             private_domain: { get_input: private_domain }
+        interfaces:
+          cloudify.interfaces.lifecycle:
+            create:
+              inputs:
+                public_ip: { get_attribute: [ ellis_ip, floating_ip_address ] }
         relationships:
-            -  type: cloudify.relationships.contained_in
-               target: ellis_vm
-            -  type: app_connected_to_bind_ellis
-               target: bind
+            - type: cloudify.relationships.contained_in
+              target: ellis_vm
+            - type: app_connected_to_bind_ellis
+              target: bind
+              target_interfaces:
+                cloudify.interfaces.relationship_lifecycle:
+                  establish:
+                    inputs:
+                      public_ip: { get_attribute: [ ellis_ip, floating_ip_address ] }
 
     ralf:
         type: clearwater.nodes.ralf
@@ -426,6 +445,7 @@ node_templates:
                target: sprout_vm
             -  type: app_connected_to_bind
                target: bind
+
 
     bind:
         type: clearwater.infra.bind

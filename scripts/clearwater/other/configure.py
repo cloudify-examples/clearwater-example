@@ -37,7 +37,7 @@ def configure(subject=None):
 
     ctx.logger.info('Configuring clearwater node.')
     template = Template(ctx.get_resource(TEMPLATE_RESOURCE_NAME))
-    timezone = subject.node.properties.get('timezone')
+    timezone = ctx.node.properties.get('timezone')
     if timezone:
         ctx.logger.info('Set time zone: %s.' % timezone)
         _run('sudo timedatectl set-timezone %s' % timezone, error_message='Cannot set time zone')
@@ -50,11 +50,7 @@ def configure(subject=None):
     relationships = ctx.instance.relationships
     public_ip = ''
     host_ip = commands.getoutput("/sbin/ifconfig").split("\n")[1].split()[1][5:]
-    for element in relationships:
-        if element.type == 'cloudify.relationships.contained_in':
-            for elements in element.target.instance.relationships:
-                if elements.type == 'cloudify.openstack.server_connected_to_floating_ip':
-                    public_ip = elements.target.instance.runtime_properties['floating_ip_address']
+    public_ip = inputs['public_ip']
 
     # Get bind host IP
     binds = []
@@ -123,13 +119,5 @@ def _run(command, error_message):
         raise exceptions.NonRecoverableError('{0}: {1}'.format(error_message, e))
 
 
-def _main():
-    invocation = inputs['invocation']
-    function = invocation['function']
-    args = invocation.get('args', [])
-    kwargs = invocation.get('kwargs', {})
-    globals()[function](*args, **kwargs)
-
-
 if __name__ == '__main__':
-    _main()
+    configure()

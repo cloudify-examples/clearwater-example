@@ -45,15 +45,7 @@ def configure(subject=None):
     subject = subject or ctx
 
     # Get bind floating IP
-    relationships = subject.instance.relationships
-    public_ip = ''
-    for element in relationships:
-        if element.type == 'cloudify.relationships.contained_in':
-            for elements in element.target.instance.relationships:
-                if elements.type == 'cloudify.openstack.server_connected_to_floating_ip':
-                    public_ip = elements.target.instance.runtime_properties['floating_ip_address']
-    if not public_ip:
-        public_ip = subject.instance.host_ip
+    public_ip = inputs['public_ip']
 
     ctx.logger.info('Creating private domain file')
 
@@ -177,14 +169,8 @@ def install(subject=None):
 # Add a new entre on the DNS domains
 def add_backend(backend_address=None):
     role = name = ctx.source.instance.id
-    role = re.split(r'_',role)[0]
-    relationships = ctx.source.instance.relationships
-    public_ip = ''
-    for element in relationships:
-        if element.type == 'cloudify.relationships.contained_in':
-            for elements in element.target.instance.relationships:
-                if elements.type == 'cloudify.openstack.server_connected_to_floating_ip':
-                    public_ip = elements.target.instance.runtime_properties['floating_ip_address']
+    role = re.split(r'_', role)[0]
+    public_ip = inputs['public_ip']
 
     with _backends_update() as backends:
         try:
@@ -193,8 +179,8 @@ def add_backend(backend_address=None):
             backends[role] = {}
         backends[role][ctx.source.instance.id] = {
             'private_address': backend_address or ctx.source.instance.host_ip,
-            'name': name.replace('_','-'),
-            'public_address' : public_ip or backend_address or ctx.source.instance.host_ip
+            'name': name.replace('_', '-'),
+            'public_address': public_ip or backend_address or ctx.source.instance.host_ip
         }
 
 # remove entre on the DNS domains

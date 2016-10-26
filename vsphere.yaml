@@ -177,10 +177,10 @@ node_templates:
           timezone: { get_input: agent_timezone }
           private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
-               target: bono_vm
-            -  type: app_connected_to_bind
-               target: bind
+            - type: cloudify.relationships.contained_in
+              target: bono_vm
+            - type: app_connected_to_bind
+              target: bind
 
     ellis:
         type: clearwater.nodes.ellis
@@ -188,10 +188,15 @@ node_templates:
             timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
-               target: ellis_vm
-            -  type: app_connected_to_bind_ellis
-               target: bind
+            - type: cloudify.relationships.contained_in
+              target: ellis_vm
+            - type: app_connected_to_bind_ellis
+              target: bind
+              target_interfaces:
+                cloudify.interfaces.relationship_lifecycle:
+                  establish:
+                    inputs:
+                      public_ip: { get_attribute: [ ellis_vm,  ip] }
 
     ralf:
         type: clearwater.nodes.ralf

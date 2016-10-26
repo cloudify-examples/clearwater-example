@@ -16,6 +16,5 @@ ctx logger info "The software is installed"
 
 /usr/share/clearwater/clearwater-etcd/scripts/wait_for_etcd
 sudo /usr/share/clearwater/clearwater-config-manager/scripts/upload_shared_config
-# sudo /usr/share/clearwater/clearwater-config-manager/scripts/apply_shared_config
 
 ctx logger info "Installation is done"
