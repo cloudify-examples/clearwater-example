@@ -103,24 +103,6 @@ dsl_definitions:
 ########################################################
 
 node_templates:
-#    a_node:
-#        type: cloudify.nodes.Compute
-#        properties:
-#           install_agent: false
-#
-#    policy_node:
-#        type: policy_node_type
-#        relationships:
-#           - target: bono-vm
-#             type: cloudify.relationships.depends_on
-#           - target: sprout-vm
-#             type: cloudify.relationships.depends_on
-#           - target: a_node
-#             type: cloudify.relationships.contained_in
-#        properties:
-#           nodes_to_monitor:
-#              - bono-vm
-#              - sprout-vm
 
     bono_vm:
         type: clearwater.nodes.MonitoredServer
@@ -261,4 +243,5 @@ outputs:
       ip_homer: { get_attribute: [ homer_vm, ip ] }
       ip_homestead: { get_attribute: [ homestead_vm, ip ] }
       ip_bono: { get_attribute: [ bono_vm, ip ] }
+      ip_ellis: { get_attribute: [ ellis_vm, ip]}
       signup_code: secret

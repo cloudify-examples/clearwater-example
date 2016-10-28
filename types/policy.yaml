@@ -2,7 +2,7 @@
 
 node_types:
     policy_node_type:
-       derived_from: cloudify.nodes.SoftwareComponent
+       derived_from: cloudify.nodes.Root
        properties:
           nodes_to_monitor:
              default: []
@@ -14,4 +14,3 @@ node_types:
              stop:
                 implementation: scripts/policy/policy-stop.sh
                 executor: central_deployment_agent
-

@@ -6,12 +6,13 @@ import json
 from os import utime
 from os import getpid 
 from os import path
-import time
+
 import datetime
 
 # check against influxdb which nodes are available CPUtotal
 # autoheal only missing nodes comparing to the node_instances that are taken from cloudify
 # do it only for compute nodes
+
 
 def cooldown():
     if path.isfile('/home/ubuntu/cooldown'):  
@@ -25,11 +26,11 @@ def cooldown():
         pass
     return False
 
+
 def check_heal(nodes_to_monitor,depl_id):
     if cooldown():
        print('Exiting...\n')
        exit(0)
-    c = CloudifyClient('localhost')
     c_influx = InfluxDBClient(host='localhost', port=8086, database='cloudify')
     f=open('/home/ubuntu/logfile','w')
     f.write('in check heal\n')

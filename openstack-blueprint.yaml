@@ -69,6 +69,9 @@ node_templates:
                   port: 2380
                 - remote_group_name: { concat: [ {get_input: manager_resource_prefix}, { get_property: [ all_nodes_external, security_group, name ] } ] }
                   port: 4000
+                - remote_ip_prefix: { get_input: subnet_cidr }
+                  port_range_min: 5060
+                  port_range_max: 5061
         relationships:
             -    type: cloudify.relationships.depends_on
                  target: all_nodes_external
@@ -264,6 +267,34 @@ node_templates:
 
 
 ##########################################################################
+    policy_node:
+      type: policy_node_type
+      properties:
+        nodes_to_monitor:
+          - ellis_vm
+          - bono_vm
+          - sprout_vm
+          - homestead_vm
+          - homer_vm
+          - ralf_vm
+          - bind_host
+      relationships:
+        - type: cloudify.relationships.depends_on
+          target: ellis_vm
+        - type: cloudify.relationships.depends_on
+          target: bono_vm
+        - type: cloudify.relationships.depends_on
+          target: sprout_vm
+        - type: cloudify.relationships.depends_on
+          target: homestead_vm
+        - type: cloudify.relationships.depends_on
+          target: homer_vm
+        - type: cloudify.relationships.depends_on
+          target: ralf_vm
+        - type: cloudify.relationships.depends_on
+          target: bind_host
+
+
     ellis_vm:
         type: clearwater.nodes.MonitoredServer
         properties:

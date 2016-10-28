@@ -48,7 +48,6 @@ def configure(subject=None):
     # Get the host public IP
     name = ctx.instance.id
     relationships = ctx.instance.relationships
-    public_ip = ''
     host_ip = commands.getoutput("/sbin/ifconfig").split("\n")[1].split()[1][5:]
     public_ip = inputs['public_ip']
 
@@ -64,7 +63,7 @@ def configure(subject=None):
         name=name.replace('_','-'),
         host_ip=host_ip,
         etcd_ip=binds[0],
-        public_ip=public_ip or host_ip))
+        public_ip=public_ip))
 
     ctx.logger.debug('Rendering the Jinja2 template to {0}.'.format(CONFIG_PATH))
     ctx.logger.debug('The config dict: {0}.'.format(config))
