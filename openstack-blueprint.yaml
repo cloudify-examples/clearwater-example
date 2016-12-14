@@ -385,18 +385,6 @@ node_templates:
             -   type: cloudify.openstack.server_connected_to_security_group
                 target: bind_host_security_group
 
-
-    proxy_node:
-      type: SNMPManagerProxy
-      relationships:
-        - type: monitors_bono_nodes
-          target: bono_vm
-        - type: monitors_sprout_nodes
-          target: sprout_vm
-        - type: monitors_ralf_nodes
-          target: ralf_vm
-        - type: monitors_homestead_nodes
-          target: homestead_vm
 ########################################################
     bono:
         type: clearwater.nodes.bono
@@ -408,7 +396,7 @@ node_templates:
               inputs:
                 public_ip: { get_attribute: [ bono_ip, floating_ip_address ] }
         relationships:
-            - type: cloudify.relationships.contained_in
+            - type: monitors_bono_nodes
               target: bono_vm
             - type: app_connected_to_bind
               target: bind
@@ -442,7 +430,7 @@ node_templates:
         properties:
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
+            -  type: monitors_ralf_nodes
                target: ralf_vm
             -  type: app_connected_to_bind
                target: bind
@@ -452,7 +440,7 @@ node_templates:
         properties:
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
+            -  type: monitors_homestead_nodes
                target: homestead_vm
             -  type: app_connected_to_bind
                target: bind
@@ -472,7 +460,7 @@ node_templates:
         properties:
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
+            -  type: monitors_sprout_nodes
                target: sprout_vm
             -  type: app_connected_to_bind
                target: bind
@@ -497,3 +485,9 @@ outputs:
       ip_ellis: { get_attribute: [ ellis_ip, floating_ip_address ] }
       ip_bono: { get_attribute: [ bono_ip, floating_ip_address ] }
       signup_code: secret
+  stress_test:
+    description: Information needed to install stress test
+    value:
+      ip_homer: { get_attribute: [ homer_vm, ip ] }
+      ip_homestead: { get_attribute: [ homestead_vm, ip ] }
+      ip_bono: { get_attribute: [ bono_vm, ip ] }

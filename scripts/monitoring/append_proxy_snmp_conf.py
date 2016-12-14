@@ -1,17 +1,18 @@
 from cloudify import ctx
 from cloudify.state import ctx_parameters as inputs
 
-
 src_instance = ctx.source.instance
+src_node = ctx.source.node
 target_instance = ctx.target.instance
 target_node = ctx.target.node
 
-config = src_instance.runtime_properties.get('snmp_collector_config', {})
+config = {}
 
 devices_conf = config.get('devices', {})
 devices_conf[target_instance.id] = device_config = {}
-device_config['node_instance_id'] = target_instance.id
-device_config['node_id'] = target_node.id
+device_config['host_id'] = target_instance.id
+device_config['node_instance_id'] = src_instance.id
+device_config['node_id'] = src_node.id
 if 'host' in inputs:
     device_config['host'] = inputs.host
 else:
@@ -22,4 +23,5 @@ device_config['oids'] = inputs.oids
 
 config['devices'] = devices_conf
 
-src_instance.runtime_properties['snmp_collector_config'] = config
+ctx.logger.info('Adding snmp collector config: {}'.format(str(config)))
+src_instance.runtime_properties['snmp_config'] = config

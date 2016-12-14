@@ -29,9 +29,29 @@ node_types:
             public_ip:
               default: ''
 
+  clearwater.nodes.monitoredconfig:
+    derived_from: clearwater.nodes.config
+    interfaces:
+      cloudify.interfaces.monitoring:
+        start:
+          implementation: diamond.diamond_agent.tasks.add_collectors
+          inputs:
+            collectors_config:
+              default:
+                CPUCollector: {}
+                MemoryCollector: {}
+                LoadAverageCollector: {}
+                DiskUsageCollector:
+                  config:
+                    devices: x?vd[a-z]+[0-9]*$
+                NetworkCollector: {}
+                SNMPProxyCollector:
+                  path: scripts/monitoring/snmpproxy.py
+                  config: { get_attribute: [SELF, snmp_config]}
+
   # Specific types for clearwater nodes (install role etc.)
   clearwater.nodes.sprout:
-    derived_from: clearwater.nodes.config
+    derived_from: clearwater.nodes.monitoredconfig
     interfaces:
       cloudify.interfaces.lifecycle:
         configure: scripts/clearwater/sprout/install-sprout.sh
@@ -39,7 +59,7 @@ node_types:
         delete: scripts/clearwater/other/remove-cluster-node.sh
 
   clearwater.nodes.bono:
-    derived_from: clearwater.nodes.config
+    derived_from: clearwater.nodes.monitoredconfig
     interfaces:
       cloudify.interfaces.lifecycle:
         configure: scripts/clearwater/bono/install-bono.sh
@@ -47,7 +67,7 @@ node_types:
         delete: scripts/clearwater/other/remove-cluster-node.sh
 
   clearwater.nodes.homestead:
-    derived_from: clearwater.nodes.config
+    derived_from: clearwater.nodes.monitoredconfig
     interfaces:
       cloudify.interfaces.lifecycle:
         configure: scripts/clearwater/homestead/install-homestead.sh
@@ -63,7 +83,7 @@ node_types:
         delete: scripts/clearwater/other/remove-cluster-node.sh
 
   clearwater.nodes.ralf:
-    derived_from: clearwater.nodes.config
+    derived_from: clearwater.nodes.monitoredconfig
     interfaces:
       cloudify.interfaces.lifecycle:
         configure: scripts/clearwater/ralf/install-ralf.sh

@@ -1,8 +1,8 @@
 relationships:
   # Specific relationships types for monitor bono, sprout and homestead nodes
   monitors_sprout_nodes:
-    derived_from: cloudify.relationships.monitors
-    source_interfaces:
+    derived_from: cloudify.relationships.contained_in
+    target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
         preconfigure:
           implementation: scripts/monitoring/append_proxy_snmp_conf.py
@@ -145,12 +145,11 @@ relationships:
                 1.2.826.0.1.1578918.9.3.37.1.5.3: sproutICSCFSessionEstablishmentNetworkSuccessPercent.scopePrevious5MinutedPeriod
                 
   monitors_bono_nodes:
-    derived_from: cloudify.relationships.monitors
-    source_interfaces:
+    derived_from: cloudify.relationships.contained_in
+    target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
         preconfigure:
           implementation: scripts/monitoring/append_proxy_snmp_conf.py
-          executor: central_deployment_agent
           inputs:
             port:
               default: 161
@@ -201,8 +200,8 @@ relationships:
 
 
   monitors_ralf_nodes:
-    derived_from: cloudify.relationships.monitors
-    source_interfaces:
+    derived_from: cloudify.relationships.contained_in
+    target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
         preconfigure:
           implementation: scripts/monitoring/append_proxy_snmp_conf.py
@@ -293,8 +292,8 @@ relationships:
                 1.2.826.0.1.1578918.9.10.9.1.5.3: chronosRegLWM.scopePrevious5MinutePeriod
 
   monitors_homestead_nodes:
-    derived_from: cloudify.relationships.monitors
-    source_interfaces:
+    derived_from: cloudify.relationships.contained_in
+    target_interfaces:
       cloudify.interfaces.relationship_lifecycle:
         preconfigure:
           implementation: scripts/monitoring/append_proxy_snmp_conf.py

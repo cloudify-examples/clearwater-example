@@ -105,51 +105,39 @@ dsl_definitions:
 node_templates:
 
     bono_vm:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
 
     ellis_vm:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
 
     sprout_vm:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
 
     homer_vm:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
 
     homestead_vm:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
 
     ralf_vm:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
 
     bind_host:
-        type: clearwater.nodes.MonitoredServer
+        type: clearwater.nodes.Server
         properties:
             connection_config: *connection_config
-
-    proxy_node:
-      type: SNMPManagerProxy
-      relationships:
-        - type: monitors_bono_nodes
-          target: bono_vm
-        - type: monitors_sprout_nodes
-          target: sprout_vm
-        - type: monitors_ralf_nodes
-          target: ralf_vm
-        - type: monitors_homestead_nodes
-          target: homestead_vm
 
 ########################################################
 
@@ -159,7 +147,7 @@ node_templates:
           timezone: { get_input: agent_timezone }
           private_domain: { get_input: private_domain }
         relationships:
-            - type: cloudify.relationships.contained_in
+            - type: monitors_bono_nodes
               target: bono_vm
             - type: app_connected_to_bind
               target: bind
@@ -186,7 +174,7 @@ node_templates:
             timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
+            -  type: monitors_ralf_nodes
                target: ralf_vm
             -  type: app_connected_to_bind
                target: bind
@@ -197,7 +185,7 @@ node_templates:
             timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
+            -  type: monitors_homestead_nodes
                target: homestead_vm
             -  type: app_connected_to_bind
                target: bind
@@ -219,7 +207,7 @@ node_templates:
             timezone: { get_input: agent_timezone }
             private_domain: { get_input: private_domain }
         relationships:
-            -  type: cloudify.relationships.contained_in
+            -  type: monitors_sprout_nodes
                target: sprout_vm
             -  type: app_connected_to_bind
                target: bind
@@ -240,8 +228,12 @@ outputs:
   web:
     description: Web application endpoint
     value:
+      ip_ellis: { get_attribute: [ ellis_vm, ip ] }
+      ip_bono: { get_attribute: [ bono_vm, ip ] }
+      signup_code: secret
+  stress_test:
+    description: Information needed to install stress test
+    value:
       ip_homer: { get_attribute: [ homer_vm, ip ] }
       ip_homestead: { get_attribute: [ homestead_vm, ip ] }
       ip_bono: { get_attribute: [ bono_vm, ip ] }
-      ip_ellis: { get_attribute: [ ellis_vm, ip]}
-      signup_code: secret

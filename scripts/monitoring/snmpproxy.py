@@ -1,5 +1,4 @@
 # coding=utf-8
-
 import time
 
 from snmpraw import SNMPRawCollector
@@ -46,8 +45,8 @@ class SNMPProxyCollector(SNMPRawCollector):
                         oid, metricName, device, value))
 
                 device_path = '{}.{}.{}'.format(
+                    dev_config['host_id'],
                     dev_config['node_id'],
-                    device,
                     dev_config['node_instance_id']
                 )
                 path = '.'.join([self.config['path_prefix'], device_path,

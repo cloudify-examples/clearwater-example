@@ -1,5 +1,12 @@
 #!/bin/bash -e
 
+kill_if_timeout() {
+  if [ $? -ne 0 ]; then
+      sudo pkill -9 apt-get
+      exit 1
+  fi
+}
+
 ctx logger debug "${COMMAND}"
 
 ctx logger info "Configure the APT software source"
@@ -11,8 +18,10 @@ fi
 sudo apt-get update
 
 ctx logger info "Installing ellis packages and other clearwater packages"
-sudo  DEBIAN_FRONTEND=noninteractive apt-get install ellis --yes --force-yes -o DPkg::options::=--force-confnew
-sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes --force-yes
+timeout 5m sudo DEBIAN_FRONTEND=noninteractive apt-get install ellis --yes --force-yes -o DPkg::options::=--force-confnew
+kill_if_timeout
+timeout 5m sudo DEBIAN_FRONTEND=noninteractive apt-get install clearwater-management --yes --force-yes
+kill_if_timeout
 ctx logger info "The installation packages is done correctly"
 
 ctx logger info "Configure a new DNS server"

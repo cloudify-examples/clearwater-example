@@ -33,6 +33,8 @@ TEMPLATE_RESOURCE_NAME_NAMESERVER = 'resources/bind/dnsmasq.template'
 
 
 def configure(subject=None):
+    import pip
+    pip.main(['install', 'pysnmp==4.2.5'])
     subject = subject or ctx
 
     ctx.logger.info('Configuring clearwater node.')
