@@ -1,0 +1,149 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+
+############################################################
+# This blueprint is an automated sip stress test described:
+# http://clearwater.readthedocs.io/en/stable/Clearwater_stress_testing.html
+############################################################
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
+  - http://www.getcloudify.org/spec/vsphere-plugin/2.0/plugin.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.4.1/plugin.yaml
+  - types/clearwater.yaml
+
+
+inputs:
+  homer_ip:
+    description: IP of one of Homer nodes
+
+  homestead_ip:
+    description: IP of one of Homestead nodes
+
+  agent_key:
+    description: key path on the manager to agent key
+
+  agent_user:
+    description: agent user
+
+  number_of_subscribers:
+    description: number of subscribers
+
+  bono_servers:
+    description: a list of bono servers
+
+  home_domain:
+    description: home domain of Clearwater installation
+
+  private_domain:
+    description: private domain of Clearwater installation
+
+  name:
+    description: name of users files (without extension)
+    default: users
+
+  vsphere_username:
+    default: ""
+  vsphere_password:
+    default: ""
+  vsphere_host:
+    default: ""
+  vsphere_port:
+    default: 443
+  vsphere_datacenter:
+    default: "Datacenter"
+  vsphere_resource_pool_name:
+    default: "Resources"
+  vsphere_auto_placement:
+    type: boolean
+    default: false
+  dns_servers:
+    default: ""
+  template_name:
+    default: "ubuntu-14.04.5-x86_64-tmpl"
+    description: >
+      Template to clone VMs from
+  vm_cpu:
+    default: 2
+  vm_memory:
+    default: 2048
+  switch_distributed:
+    type: boolean
+    default: false
+  network:
+    default: "VM Network"
+  stress_test_ip:
+    default: "10.10.111.105"
+  gateway_ip:
+    default: "10.10.111.1"
+  network_ip:
+    default: "10.10.111.0/24"
+
+dsl_definitions:
+    connection_config: &connection_config
+        username: { get_input: vsphere_username }
+        password: { get_input: vsphere_password }
+        host: { get_input: vsphere_host }
+        port: { get_input: vsphere_port }
+        datacenter_name: { get_input: vsphere_datacenter }
+        resource_pool_name: { get_input: vsphere_resource_pool_name }
+        auto_placement: { get_input: vsphere_auto_placement }
+
+node_templates:
+
+  stress_test_host:
+    type: cloudify.vsphere.nodes.Server
+    properties:
+      cloudify_agent:
+        user: { get_input: agent_user }
+        key: { get_input: agent_key }
+      server:
+        template: { get_input: template_name }
+        cpus: { get_input: vm_cpu }
+        memory: { get_input: vm_memory }
+      networking:
+          dns_servers: { get_input: dns_servers }
+          connect_networks:
+              - name: { get_input: network }
+                switch_distributed: { get_input: switch_distributed }
+                management: True
+                external: True
+                use_dhcp: False
+                ip: { get_input: stress_test_ip }
+                gateway: { get_input: gateway_ip }
+                network: { get_input: network_ip }
+      connection_config: *connection_config
+
+  stress_test:
+    type: clearwater.nodes.stress-test
+    properties:
+      public_domain: { get_input: home_domain }
+      homestead_ip: { get_input: homestead_ip }
+      bono_servers: { get_input: bono_servers }
+      number_of_subscribers: { get_input: number_of_subscribers }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: stress_test_host
+      - type: cloudify.relationships.depends_on
+        target: homer_bulk_number
+      - type: cloudify.relationships.depends_on
+        target: homestead_bulk_number
+
+  homer_bulk_number:
+    type: clearwater.nodes.bulknumber.homer
+    properties:
+      name: { get_input: name }
+      homestead_ip: { get_input: homestead_ip }
+      homer_ip: { get_input: homer_ip }
+      ssh_user: { get_input: agent_user }
+      ssh_key: { get_input: agent_key }
+
+  homestead_bulk_number:
+    type: clearwater.nodes.bulknumber.homestead
+    properties:
+      name: { get_input: name }
+      number_of_subscribers: { get_input: number_of_subscribers }
+      home_domain: { get_input: home_domain }
+      ssh_user: { get_input: agent_user }
+      ssh_key: { get_input: agent_key }
+      homestead_ip: { get_input: homestead_ip }

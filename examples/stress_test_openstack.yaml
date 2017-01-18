@@ -1,0 +1,86 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+############################################################
+# This blueprint is an automated sip stress test described:
+# http://clearwater.readthedocs.io/en/stable/Clearwater_stress_testing.html
+############################################################
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.5/plugin.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.4.1/plugin.yaml
+  - types/clearwater.yaml
+
+
+inputs:
+  homer_ip:
+    description: IP of one of Homer nodes
+
+  homestead_ip:
+    description: IP of one of Homestead nodes
+
+  agent_key:
+    description: key path on the manager to agent key
+
+  agent_user:
+    description: agent user
+
+  number_of_subscribers:
+    description: number of subscribers
+
+  bono_servers:
+    description: a list of bono servers
+
+  home_domain:
+    description: home domain of Clearwater installation
+
+  private_domain:
+    description: private domain of Clearwater installation
+
+  name:
+    description: name of users files (without extension)
+    default: users
+
+node_templates:
+
+  stress_test_host:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      cloudify_agent:
+       user: ubuntu
+      server:
+        image: 6c3047c6-17b1-4aaf-a657-9229bb481e50 # Ubuntu Server 14.04.1 LTS
+        flavor: 05a9e6d1-d29f-4e98-9eab-51c9a6beed44
+
+  stress_test:
+    type: clearwater.nodes.stress-test
+    properties:
+      public_domain: { get_input: home_domain }
+      homestead_ip: { get_input: homestead_ip }
+      bono_servers: { get_input: bono_servers }
+      number_of_subscribers: { get_input: number_of_subscribers }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: stress_test_host
+      - type: cloudify.relationships.depends_on
+        target: homer_bulk_number
+      - type: cloudify.relationships.depends_on
+        target: homestead_bulk_number
+
+  homer_bulk_number:
+    type: clearwater.nodes.bulknumber.homer
+    properties:
+      name: { get_input: name }
+      homestead_ip: { get_input: homestead_ip }
+      homer_ip: { get_input: homer_ip }
+      ssh_user: { get_input: agent_user }
+      ssh_key: { get_input: agent_key }
+
+  homestead_bulk_number:
+    type: clearwater.nodes.bulknumber.homestead
+    properties:
+      name: { get_input: name }
+      number_of_subscribers: { get_input: number_of_subscribers }
+      home_domain: { get_input: home_domain }
+      ssh_user: { get_input: agent_user }
+      ssh_key: { get_input: agent_key }
+      homestead_ip: { get_input: homestead_ip }
