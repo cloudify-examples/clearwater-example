@@ -3,224 +3,215 @@ tosca_definitions_version: cloudify_dsl_1_3
 ########################################################
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
   - http://www.getcloudify.org/spec/vsphere-plugin/2.0/plugin.yaml
-  - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
-  - types/clearwater-monitoring.yaml
-  - types/clearwater.yaml
+  - application-blueprint.yaml
   - types/vsphere.yaml
-#  - types/policy.yaml
-  - types/snmp.yaml
-  - types/bind.yaml
-
-inputs:
 
 ########################################################
 #  vSphere connection config
 ########################################################
 
-    vsphere_username:
-        default: "administrator@vsphere.local"
-    
-    vsphere_password:
-        default: ""
-    
-    vsphere_host:
-        default: ""
-    
-    vsphere_port:
-        default: 443
-    
-    vsphere_datacenter:
-        default: "Datacenter"
-    
-    vsphere_resource_pool_name:
-        default: "Resources"
-    
-    vsphere_auto_placement:
-        type: boolean
-        default: false
+inputs:
 
-    private_domain:
-        default: clearwater.local
+  vsphere_username:
+    default: "administrator@vsphere.local"
 
-    public_domain:
-        default: example.com
+  vsphere_password:
+    default: ""
+
+  vsphere_host:
+    default: ""
+
+  vsphere_port:
+    default: 443
+
+  vsphere_datacenter:
+    default: "Datacenter"
+
+  vsphere_resource_pool_name:
+    default: "Resources"
+
+  vsphere_auto_placement:
+    type: boolean
+    default: false
 
 ########################################################
 # VMs parameters
 ########################################################
 
-    agent_user:
-        default:  'ubuntu'
-        description: >
-            User for connecting to application VMs
-    agent_key_file:
-        default: '~/.ssh/agent.pem'
+  agent_user:
+    default:  'ubuntu'
+    description: >
+      User for connecting to application VMs
 
-    agent_timezone:
-        default: ""
-        description: >
-            Common timezone for the hosts to make sure metrics
-            are collected in the same timezone
+  agent_key_file:
+    default: '~/.ssh/agent.pem'
 
-    template_name:
-        default: "ubuntu-14.04.5-x86_64-tmpl"
-        description: >
-            Template to clone VMs from
-    vm_cpu:
-        default: 1
-    
-    vm_memory:
-        default: 2048
+  agent_timezone:
+    default: ""
+    description: >
+      Common timezone for the hosts to make sure metrics
+      are collected in the same timezone
+
+  template_name:
+    default: "ubuntu-14.04.5-x86_64-tmpl"
+    description: >
+      Template to clone VMs from
+  vm_cpu:
+    default: 1
+
+  vm_memory:
+    default: 2048
         
 ########################################################
 # Network parameters
-########################################################        
-    network:
-        default: "VM Network"
+########################################################
 
-    switch_distributed:
-        type: boolean
-        default: false
+  network:
+    default: "VM Network"
 
-    dns_servers:
-        default:
-            - 8.8.8.8
-            - 8.8.4.4
+  switch_distributed:
+    type: boolean
+    default: false
+
+  dns_servers:
+    default:
+      - 8.8.8.8
+      - 8.8.4.4
+
 ########################################################
 
 dsl_definitions:
-    connection_config: &connection_config
-        username: { get_input: vsphere_username }
-        password: { get_input: vsphere_password }
-        host: { get_input: vsphere_host }
-        port: { get_input: vsphere_port }
-        datacenter_name: { get_input: vsphere_datacenter }
-        resource_pool_name: { get_input: vsphere_resource_pool_name }
-        auto_placement: { get_input: vsphere_auto_placement }
+  connection_config: &connection_config
+    username: { get_input: vsphere_username }
+    password: { get_input: vsphere_password }
+    host: { get_input: vsphere_host }
+    port: { get_input: vsphere_port }
+    datacenter_name: { get_input: vsphere_datacenter }
+    resource_pool_name: { get_input: vsphere_resource_pool_name }
+    auto_placement: { get_input: vsphere_auto_placement }
 
 ########################################################
 
 node_templates:
 
-    bono_vm:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  bono_vm:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
-    ellis_vm:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  ellis_vm:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
-    sprout_vm:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  sprout_vm:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
-    homer_vm:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  homer_vm:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
-    homestead_vm:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  homestead_vm:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
-    ralf_vm:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  ralf_vm:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
-    bind_host:
-        type: clearwater.nodes.Server
-        properties:
-            connection_config: *connection_config
+  bind_host:
+    type: clearwater.nodes.Server
+    properties:
+      connection_config: *connection_config
 
 ########################################################
 
-    bono:
-        type: clearwater.nodes.bono
-        properties:
-          timezone: { get_input: agent_timezone }
-          private_domain: { get_input: private_domain }
-        relationships:
-            - type: monitors_bono_nodes
-              target: bono_vm
-            - type: app_connected_to_bind
-              target: bind
+  bono:
+    type: clearwater.nodes.bono
+    properties:
+      timezone: { get_input: agent_timezone }
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_bono_nodes
+        target: bono_vm
+      - type: app_connected_to_bind
+        target: bind
 
-    ellis:
-        type: clearwater.nodes.ellis
-        properties:
-            timezone: { get_input: agent_timezone }
-            private_domain: { get_input: private_domain }
-        relationships:
-            - type: cloudify.relationships.contained_in
-              target: ellis_vm
-            - type: app_connected_to_bind_ellis
-              target: bind
-              target_interfaces:
-                cloudify.interfaces.relationship_lifecycle:
-                  establish:
-                    inputs:
-                      public_ip: { get_attribute: [ ellis_vm,  ip] }
+  ellis:
+    type: clearwater.nodes.ellis
+    properties:
+      timezone: { get_input: agent_timezone }
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: ellis_vm
+      - type: app_connected_to_bind_ellis
+        target: bind
+        target_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              inputs:
+                public_ip: { get_attribute: [ ellis_vm,  ip] }
 
-    ralf:
-        type: clearwater.nodes.ralf
-        properties:
-            timezone: { get_input: agent_timezone }
-            private_domain: { get_input: private_domain }
-        relationships:
-            -  type: monitors_ralf_nodes
-               target: ralf_vm
-            -  type: app_connected_to_bind
-               target: bind
+  ralf:
+    type: clearwater.nodes.ralf
+    properties:
+      timezone: { get_input: agent_timezone }
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_ralf_nodes
+        target: ralf_vm
+      - type: app_connected_to_bind
+        target: bind
 
-    homestead:
-        type: clearwater.nodes.homestead
-        properties:
-            timezone: { get_input: agent_timezone }
-            private_domain: { get_input: private_domain }
-        relationships:
-            -  type: monitors_homestead_nodes
-               target: homestead_vm
-            -  type: app_connected_to_bind
-               target: bind
+  homestead:
+    type: clearwater.nodes.homestead
+    properties:
+      timezone: { get_input: agent_timezone }
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_homestead_nodes
+        target: homestead_vm
+      - type: app_connected_to_bind
+        target: bind
 
-    homer:
-        type: clearwater.nodes.homer
-        properties:
-            timezone: { get_input: agent_timezone }
-            private_domain: { get_input: private_domain }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: homer_vm
-            -  type: app_connected_to_bind
-               target: bind
+  homer:
+    type: clearwater.nodes.homer
+    properties:
+      timezone: { get_input: agent_timezone }
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: homer_vm
+      - type: app_connected_to_bind
+        target: bind
 
-    sprout:
-        type: clearwater.nodes.sprout
-        properties:
-            timezone: { get_input: agent_timezone }
-            private_domain: { get_input: private_domain }
-        relationships:
-            -  type: monitors_sprout_nodes
-               target: sprout_vm
-            -  type: app_connected_to_bind
-               target: bind
+  sprout:
+    type: clearwater.nodes.sprout
+    properties:
+      timezone: { get_input: agent_timezone }
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_sprout_nodes
+        target: sprout_vm
+      - type: app_connected_to_bind
+        target: bind
 
-    bind:
-        type: clearwater.infra.bind
-        properties:
-            private_domain: { get_input: private_domain }
-            public_domain: { get_input: public_domain }
-            secret_code: secret
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: bind_host
+  bind:
+    type: clearwater.infra.bind
+    properties:
+      private_domain: { get_input: private_domain }
+      public_domain: { get_input: public_domain }
+      secret_code: secret
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: bind_host
 
 ########################################################
 

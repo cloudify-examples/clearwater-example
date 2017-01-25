@@ -3,627 +3,656 @@ tosca_definitions_version: cloudify_dsl_1_3
 ########################################################
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.4/types.yaml
-  - http://www.getcloudify.org/spec/aws-plugin/1.4.1/plugin.yaml
-  - http://www.getcloudify.org/spec/diamond-plugin/1.3.4/plugin.yaml
+  - http://www.getcloudify.org/spec/aws-plugin/1.4.3/plugin.yaml
+  - application-blueprint.yaml
+  - types/aws.yaml
 
 ########################################################
 
 plugins:
-    dns-plugin:
-        executor: host_agent
-        source: dns-plugin
+  dns-plugin:
+    executor: host_agent
+    source: dns-plugin
 
 ########################################################
 
 relationships:
-    dns_client_uses_dns_server:
-       derived_from: cloudify.relationships.connected_to
-       source_interfaces:
-          cloudify.interfaces.relationship_lifecycle:
-             preconfigure: dns-plugin.dns_plugin.tasks.configure_resolv_conf
-
-
-########################################################
-
-node_types:
-    policy_node_type:
-       derived_from: cloudify.nodes.SoftwareComponent
-       properties:
-          nodes_to_monitor:
-             default: []
-       interfaces:
-          cloudify.interfaces.lifecycle:
-             start:
-                implementation: scripts/policy-start.sh
-                executor: central_deployment_agent
-             stop:
-                implementation: scripts/policy-stop.sh
-                executor: central_deployment_agent
+  dns_client_uses_dns_server:
+    derived_from: cloudify.relationships.connected_to
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure: dns-plugin.dns_plugin.tasks.configure_resolv_conf
 
 ########################################################
 
 inputs:
 
-    cloudify_agent:
-        default: 'ubuntu'
+  cloudify_agent:
+    default: 'ubuntu'
 
-    image_id:
-        default: ami-fce3c696 # Ubuntu 14.04 Server
+  image_id:
+    default: ami-fce3c696 # Ubuntu 14.04 Server
 
-    image_size:
-        default: 'm3.medium'
+  image_size:
+    default: 'm3.medium'
 
-    subnet_cidr:
-        default: 172.16.0.0/16
+  subnet_cidr:
+    default: 172.16.0.0/16
+
+  aws_access_key_id:
+    description: YOUR AWS ACCESS KEY ID
+
+  aws_secret_access_key:
+    description: YOUR AWS SECRET ACCESS KEY
+
+  ec2_region_name:
+    default: us-east-1
+
+  ec2_region_endpoint:
+    default: ec2.us-east-1.amazonaws.com
+
+  availability_zone:
+    default: us-east-1e
+
+  aws_configuration:
+    default:
+      aws_access_key_id: { get_input: aws_access_key_id }
+      aws_secret_access_key: { get_input: aws_secret_access_key }
+      ec2_region_name: { get_input: ec2_region_name }
+      ec2_region_endpoint: { get_input: ec2_region_endpoint }
+
 
 ########################################################
 
 node_templates:
 
-    a_node:
-        type: cloudify.nodes.Compute
-        properties:
-           install_agent: false
+  a_node:
+    type: cloudify.nodes.Compute
+    properties:
+      install_agent: false
 
-    policy_node:
-        type: policy_node_type
-        relationships:
-           - target: bono_vm
-             type: cloudify.relationships.depends_on
-           - target: sprout_vm
-             type: cloudify.relationships.depends_on
-           - target: a_node
-             type: cloudify.relationships.contained_in
-        properties:
-           nodes_to_monitor:
-              - bono_vm
-              - sprout_vm
+  policy_node:
+    type: policy_node_type
+    relationships:
+      - target: bono_vm
+        type: cloudify.relationships.depends_on
+      - target: sprout_vm
+        type: cloudify.relationships.depends_on
+      - target: a_node
+        type: cloudify.relationships.contained_in
+    properties:
+       nodes_to_monitor:
+          - bono_vm
+          - sprout_vm
 
-    all_nodes_external:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: All Clearwater Nodes External
-            rules:
-            - ip_protocol: icmp
-              from_port: 0
-              to_port: 8
-              cidr_ip: 0.0.0.0/0
+  all_nodes_external:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: All Clearwater Nodes External
+      rules:
+        - ip_protocol: icmp
+          from_port: 0
+          to_port: 8
+          cidr_ip: 0.0.0.0/0
 
-    all_nodes_internal:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: All Clearwater Nodes Internal
-            rules:
-                - ip_protocol: tcp
-                  from_port: 0
-                  to_port: 65535
-                  cidr_ip: { get_input: subnet_cidr }
-                - ip_protocol: udp
-                  from_port: 161
-                  to_port: 162
-                  src_group_id: { get_property: [all_nodes_external, resource_id] }
-                - ip_protocol: tcp
-                  from_port: 2380
-                  to_port: 2380
-                  src_group_id: { get_property: [all_nodes_external, resource_id] }
-                - ip_protocol: tcp
-                  from_port: 4000
-                  to_port: 4000
-                  src_group_id: { get_property: [all_nodes_external, resource_id] }
-        relationships:
-            -    type: cloudify.relationships.depends_on
-                 target: all_nodes_external
+  all_nodes_internal:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: All Clearwater Nodes Internal
+      rules:
+        - ip_protocol: tcp
+          from_port: 0
+          to_port: 65535
+          cidr_ip: { get_input: subnet_cidr }
+        - ip_protocol: udp
+          from_port: 161
+          to_port: 162
+          src_group_id: { get_property: [all_nodes_external, resource_id] }
+        - ip_protocol: tcp
+          from_port: 2380
+          to_port: 2380
+          src_group_id: { get_property: [all_nodes_external, resource_id] }
+        - ip_protocol: tcp
+          from_port: 4000
+          to_port: 4000
+          src_group_id: { get_property: [all_nodes_external, resource_id] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: all_nodes_external
 
-    ellis_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Ellis VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  cidr_ip: 0.0.0.0/0
-                  from_port: 80
-                  to_port: 80
-                - ip_protocol: tcp
-                  cidr_ip: 0.0.0.0/0
-                  from_port: 443
-                  to_port: 443
+  ellis_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Ellis VM Security Group
+      rules:
+        - ip_protocol: tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: 80
+          to_port: 80
+        - ip_protocol: tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: 443
+          to_port: 443
 
-    bono_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Bono VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  from_port: 3478
-                  to_port: 3478
-                  cidr_ip: 0.0.0.0/0
-                - ip_protocol: udp
-                  from_port: 3478
-                  to_port: 3478
-                  cidr_ip: 0.0.0.0/0
-                - ip_protocol: tcp
-                  from_port: 5060
-                  to_port: 5060
-                  cidr_ip: 0.0.0.0/0
-                - ip_protocol: udp
-                  from_port: 5060
-                  to_port: 5060
-                  cidr_ip: 0.0.0.0/0
-                - ip_protocol: tcp
-                  from_port: 5062
-                  to_port: 5062
-                  cidr_ip: 0.0.0.0/0
-                - ip_protocol: udp
-                  from_port: 32768
-                  to_port: 65535
-                  cidr_ip: 0.0.0.0/0
+  bono_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Bono VM Security Group
+      rules:
+        - ip_protocol: tcp
+          from_port: 3478
+          to_port: 3478
+          cidr_ip: 0.0.0.0/0
+        - ip_protocol: udp
+          from_port: 3478
+          to_port: 3478
+          cidr_ip: 0.0.0.0/0
+        - ip_protocol: tcp
+          from_port: 5060
+          to_port: 5060
+          cidr_ip: 0.0.0.0/0
+        - ip_protocol: udp
+          from_port: 5060
+          to_port: 5060
+          cidr_ip: 0.0.0.0/0
+        - ip_protocol: tcp
+          from_port: 5062
+          to_port: 5062
+          cidr_ip: 0.0.0.0/0
+        - ip_protocol: udp
+          from_port: 32768
+          to_port: 65535
+          cidr_ip: 0.0.0.0/0
 
-    bono_to_others_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Bono to Others VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [bono_vm_security_group, resource_id] }
-                  from_port: 5058
-                  to_port: 5058
-                - ip_protocol: udp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 5058
-                  to_port: 5058
-        relationships:
-            -    type: cloudify.relationships.depends_on
-                 target: bono_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: sprout_vm_security_group
+  bono_to_others_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Bono to Others VM Security Group
+      rules:
+        - ip_protocol: tcp
+          src_group_id: { get_property: [bono_vm_security_group, resource_id] }
+          from_port: 5058
+          to_port: 5058
+        - ip_protocol: udp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 5058
+          to_port: 5058
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: bono_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: sprout_vm_security_group
 
-    sprout_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Sprout VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  cidr_ip: 0.0.0.0/0
-                  from_port: 443
-                  to_port: 443
+  sprout_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Sprout VM Security Group
+      rules:
+        - ip_protocol: tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: 443
+          to_port: 443
 
-    sprout_to_others_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Sprout to Others VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [bono_vm_security_group, resource_id] }
-                  from_port: 5052
-                  to_port: 5052
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [bono_vm_security_group, resource_id] }
-                  from_port: 5054
-                  to_port: 5054
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 7000
-                  to_port: 7000
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 7253
-                  to_port: 7253
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 9160
-                  to_port: 9160
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 11211
-                  to_port: 11211
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [homestead_vm_security_group, resource_id] }
-                  from_port: 9888
-                  to_port: 9888
-        relationships:
-            -    type: cloudify.relationships.depends_on
-                 target: bono_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: sprout_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: homestead_vm_security_group
+  sprout_to_others_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Sprout to Others VM Security Group
+      rules:
+        - ip_protocol: tcp
+          src_group_id: { get_property: [bono_vm_security_group, resource_id] }
+          from_port: 5052
+          to_port: 5052
+        - ip_protocol: tcp
+          src_group_id: { get_property: [bono_vm_security_group, resource_id] }
+          from_port: 5054
+          to_port: 5054
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 7000
+          to_port: 7000
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 7253
+          to_port: 7253
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 9160
+          to_port: 9160
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 11211
+          to_port: 11211
+        - ip_protocol: tcp
+          src_group_id: { get_property: [homestead_vm_security_group, resource_id] }
+          from_port: 9888
+          to_port: 9888
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: bono_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: sprout_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: homestead_vm_security_group
 
-    homestead_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Homestead VM Security Group
-            rules:
-              - ip_protocol: tcp
-                cidr_ip: 0.0.0.0/0
-                from_port: 0
-                to_port: 65535
+  homestead_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Homestead VM Security Group
+      rules:
+        - ip_protocol: tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: 0
+          to_port: 65535
 
-    homestead_to_others_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Homestead to Others VM Security Groupbono_vm_security_group
-            rules:
-                - ip_protocol: udp
-                  src_group_id: { get_property: [homestead_vm_security_group, resource_id] }
-                  from_port: 7000
-                  to_port: 7000
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 8888
-                  to_port: 8888
-                - ip_protocol: udp
-                  src_group_id: { get_property: [ellis_vm_security_group, resource_id] }
-                  from_port: 8888
-                  to_port: 8888
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [ellis_vm_security_group, resource_id] }
-                  from_port: 8889
-                  to_port: 8889
-        relationships:
-            -    type: cloudify.relationships.depends_on
-                 target: sprout_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: ellis_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: homestead_vm_security_group
+  homestead_to_others_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Homestead to Others VM Security Groupbono_vm_security_group
+      rules:
+        - ip_protocol: udp
+          src_group_id: { get_property: [homestead_vm_security_group, resource_id] }
+          from_port: 7000
+          to_port: 7000
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 8888
+          to_port: 8888
+        - ip_protocol: udp
+          src_group_id: { get_property: [ellis_vm_security_group, resource_id] }
+          from_port: 8888
+          to_port: 8888
+        - ip_protocol: tcp
+          src_group_id: { get_property: [ellis_vm_security_group, resource_id] }
+          from_port: 8889
+          to_port: 8889
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: sprout_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: ellis_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: homestead_vm_security_group
 
-    homer_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Homer VM Security Group
+  homer_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Homer VM Security Group
 
-    homer_to_others_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Homer to Others VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [homer_vm_security_group, resource_id] }
-                  from_port: 7000
-                  to_port: 7000
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 7888
-                  to_port: 7888
-                - ip_protocol: udp
-                  src_group_id: { get_property: [ellis_vm_security_group, resource_id] }
-                  from_port: 7888
-                  to_port: 7888
-        relationships:
-            -    type: cloudify.relationships.depends_on
-                 target: sprout_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: ellis_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: homer_vm_security_group
+  homer_to_others_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Homer to Others VM Security Group
+      rules:
+        - ip_protocol: tcp
+          src_group_id: { get_property: [homer_vm_security_group, resource_id] }
+          from_port: 7000
+          to_port: 7000
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 7888
+          to_port: 7888
+        - ip_protocol: udp
+          src_group_id: { get_property: [ellis_vm_security_group, resource_id] }
+          from_port: 7888
+          to_port: 7888
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: sprout_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: ellis_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: homer_vm_security_group
 
-    ralf_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Ralf VM Security Group
+  ralf_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Ralf VM Security Group
 
-    ralf_to_others_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: Ralf to Others VM Security Group
-            rules:
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [ralf_vm_security_group, resource_id] }
-                  from_port: 7253
-                  to_port: 7253
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
-                  from_port: 10888
-                  to_port: 10888
-                - ip_protocol: udp
-                  src_group_id: { get_property: [bono_vm_security_group, resource_id] }
-                  from_port: 10888
-                  to_port: 10888
-                - ip_protocol: tcp
-                  src_group_id: { get_property: [ralf_vm_security_group, resource_id] }
-                  from_port: 11211
-                  to_port: 11211
-        relationships:
-            -    type: cloudify.relationships.depends_on
-                 target: sprout_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: bono_vm_security_group
-            -    type: cloudify.relationships.depends_on
-                 target: ralf_vm_security_group
+  ralf_to_others_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: Ralf to Others VM Security Group
+      rules:
+        - ip_protocol: tcp
+          src_group_id: { get_property: [ralf_vm_security_group, resource_id] }
+          from_port: 7253
+          to_port: 7253
+        - ip_protocol: tcp
+          src_group_id: { get_property: [sprout_vm_security_group, resource_id] }
+          from_port: 10888
+          to_port: 10888
+        - ip_protocol: udp
+          src_group_id: { get_property: [bono_vm_security_group, resource_id] }
+          from_port: 10888
+          to_port: 10888
+        - ip_protocol: tcp
+          src_group_id: { get_property: [ralf_vm_security_group, resource_id] }
+          from_port: 11211
+          to_port: 11211
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: sprout_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: bono_vm_security_group
+      - type: cloudify.relationships.depends_on
+        target: ralf_vm_security_group
 
-    dns_vm_security_group:
-        type: cloudify.aws.nodes.SecurityGroup
-        properties:
-            description: DNS VM Security Group
+  dns_vm_security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_configuration }
+      description: DNS VM Security Group
 
-    bono_ip:
-        type: cloudify.aws.nodes.ElasticIP
+  bono_ip:
+    type: cloudify.aws.nodes.ElasticIP
+    properties:
+      aws_config: { get_input: aws_configuration }
 
-    ellis_ip:
-        type: cloudify.aws.nodes.ElasticIP
+  ellis_ip:
+    type: cloudify.aws.nodes.ElasticIP
+    properties:
+      aws_config: { get_input: aws_configuration }
 
-    ellis_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_elastic_ip
-                target: ellis_ip
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: ellis_vm_security_group
+  ellis_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+        user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_elastic_ip
+        target: ellis_ip
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: ellis_vm_security_group
 
-    bono_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_elastic_ip
-                target: bono_ip
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: bono_vm_security_group
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: bono_to_others_security_group
-        interfaces:
-            cloudify.interfaces.monitoring_agent:
-               install:
-                  implementation: diamond.diamond_agent.tasks.install
-                  inputs:
-                     diamond_config:
-                        interval: 5
-               start: diamond.diamond_agent.tasks.start
-               stop: diamond.diamond_agent.tasks.stop
-               uninstall: diamond.diamond_agent.tasks.uninstall
-            cloudify.interfaces.monitoring:
-               start:
-                  implementation: diamond.diamond_agent.tasks.add_collectors
-                  inputs:
-                     collectors_config:
-                           CPUCollector: {}
+  bono_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+          user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_elastic_ip
+        target: bono_ip
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: bono_vm_security_group
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: bono_to_others_security_group
+    interfaces:
+      cloudify.interfaces.monitoring_agent:
+        install:
+          implementation: diamond.diamond_agent.tasks.install
+          inputs:
+            diamond_config:
+              interval: 5
+        start: diamond.diamond_agent.tasks.start
+        stop: diamond.diamond_agent.tasks.stop
+        uninstall: diamond.diamond_agent.tasks.uninstall
+      cloudify.interfaces.monitoring:
+         start:
+           implementation: diamond.diamond_agent.tasks.add_collectors
+           inputs:
+             collectors_config:
+             CPUCollector: {}
 
-    sprout_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: sprout_vm_security_group
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: sprout_to_others_security_group
+  sprout_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+        user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: sprout_vm_security_group
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: sprout_to_others_security_group
+    interfaces:
+      cloudify.interfaces.monitoring_agent:
+        install:
+          implementation: diamond.diamond_agent.tasks.install
+          inputs:
+            diamond_config:
+              interval: 5
+        start: diamond.diamond_agent.tasks.start
+        stop: diamond.diamond_agent.tasks.stop
+        uninstall: diamond.diamond_agent.tasks.uninstall
+      cloudify.interfaces.monitoring:
+        start:
+          implementation: diamond.diamond_agent.tasks.add_collectors
+          inputs:
+            collectors_config:
+              CPUCollector: {}
 
-        interfaces:
-            cloudify.interfaces.monitoring_agent:
-               install:
-                  implementation: diamond.diamond_agent.tasks.install
-                  inputs:
-                     diamond_config:
-                        interval: 5
-               start: diamond.diamond_agent.tasks.start
-               stop: diamond.diamond_agent.tasks.stop
-               uninstall: diamond.diamond_agent.tasks.uninstall
+  homestead_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+        user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: homestead_vm_security_group
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: homestead_to_others_security_group
 
-            cloudify.interfaces.monitoring:
-               start:
-                  implementation: diamond.diamond_agent.tasks.add_collectors
-                  inputs:
-                     collectors_config:
-                           CPUCollector: {}
+  homer_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+        user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: homer_vm_security_group
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: homer_to_others_security_group
 
-    homestead_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: homestead_vm_security_group
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: homestead_to_others_security_group
+  ralf_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+        user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: ralf_vm_security_group
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: ralf_to_others_security_group
 
-    homer_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: homer_vm_security_group
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: homer_to_others_security_group
+  dns_vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_configuration }
+      cloudify_agent:
+        user: { get_input: cloudify_agent }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: image_size }
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_internal
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: all_nodes_external
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: dns_vm_security_group
 
-    ralf_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: ralf_vm_security_group
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: ralf_to_others_security_group
-
-    dns_vm:
-        type: cloudify.aws.nodes.Instance
-        properties:
-            cloudify_agent:
-                user: { get_input: cloudify_agent }
-            image_id: { get_input: image_id }
-            instance_type: { get_input: image_size }
-        relationships:
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_internal
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: all_nodes_external
-            -   type: cloudify.aws.relationships.instance_connected_to_security_group
-                target: dns_vm_security_group
-
-
-########################################################
-    bono_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/bono.sh
-                 inputs:
-                    public_ip: { get_attribute: [ bono_ip, aws_resource_id ] }
-                    dns_ip: { get_attribute: [ dns_vm, ip ]  }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: bono_vm
-            -  type: dns_client_uses_dns_server
-               target: dns_app
-
-    ellis_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/ellis.sh
-                 inputs:
-                    public_ip: { get_attribute: [ellis_ip, aws_resource_id] }
-                    dns_ip: { get_attribute: [dns_vm, ip] }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: ellis_vm
-            -  type: dns_client_uses_dns_server
-               target: dns_app
-
-    ralf_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/ralf.sh
-                 inputs:
-                    dns_ip: { get_attribute: [ dns_vm, ip ] }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: ralf_vm
-            -  type: dns_client_uses_dns_server
-               target: dns_app
-
-    homestead_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/homestead.sh
-                 inputs:
-                    dns_ip: { get_attribute: [dns_vm, ip] }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: homestead_vm
-            -  type: dns_client_uses_dns_server
-               target: dns_app
-
-    homer_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/homer.sh
-                 inputs:
-                    dns_ip: { get_attribute: [dns_vm, ip] }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: homer_vm
-            -  type: dns_client_uses_dns_server
-               target: dns_app
-
-    sprout_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/sprout.sh
-                 inputs:
-                    dns_ip: { get_attribute: [dns_vm, ip] }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: sprout_vm
-            -  type: dns_client_uses_dns_server
-               target: dns_app
-
-    dns_app:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/dns.sh
-                 inputs:
-                    dns_ip: { get_attribute: [dns_vm, ip] }
-        relationships:
-            -  type: cloudify.relationships.contained_in
-               target: dns_vm
 
 ########################################################
 
-    dns_app_config:
-        type: cloudify.nodes.SoftwareComponent
-        interfaces:
-           cloudify.interfaces.lifecycle:
-              create:
-                 implementation: scripts/dns-config.sh
-                 inputs:
-                    process:
-                       command_prefix: /usr/bin/sudo
-        relationships:
-                -  type: cloudify.relationships.contained_in
-                   target: dns_vm
-                -  type: cloudify.relationships.connected_to
-                   target: dns_app
-                -  type: cloudify.relationships.connected_to
-                   target: bono_app
-                -  type: cloudify.relationships.connected_to
-                   target: ellis_app
-                -  type: cloudify.relationships.connected_to
-                   target: ralf_app
-                -  type: cloudify.relationships.connected_to
-                   target: sprout_app
-                -  type: cloudify.relationships.connected_to
-                   target: homer_app
-                -  type: cloudify.relationships.connected_to
-                   target: homestead_app
+  bono_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/bono.sh
+          inputs:
+            public_ip: { get_attribute: [ bono_ip, aws_resource_id ] }
+            dns_ip: { get_attribute: [ dns_vm, ip ]  }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: bono_vm
+      - type: dns_client_uses_dns_server
+        target: dns_app
+
+  ellis_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/ellis.sh
+          inputs:
+            public_ip: { get_attribute: [ellis_ip, aws_resource_id] }
+            dns_ip: { get_attribute: [dns_vm, ip] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: ellis_vm
+      - type: dns_client_uses_dns_server
+        target: dns_app
+
+  ralf_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/ralf.sh
+          inputs:
+            dns_ip: { get_attribute: [ dns_vm, ip ] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: ralf_vm
+      - type: dns_client_uses_dns_server
+        target: dns_app
+
+  homestead_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/homestead.sh
+          inputs:
+            dns_ip: { get_attribute: [dns_vm, ip] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: homestead_vm
+      - type: dns_client_uses_dns_server
+        target: dns_app
+
+  homer_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/homer.sh
+          inputs:
+            dns_ip: { get_attribute: [dns_vm, ip] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: homer_vm
+      - type: dns_client_uses_dns_server
+        target: dns_app
+
+  sprout_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/sprout.sh
+          inputs:
+            dns_ip: { get_attribute: [dns_vm, ip] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: sprout_vm
+      - type: dns_client_uses_dns_server
+        target: dns_app
+
+  dns_app:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/dns.sh
+          inputs:
+            dns_ip: { get_attribute: [dns_vm, ip] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: dns_vm
+
+########################################################
+
+  dns_app_config:
+    type: cloudify.nodes.SoftwareComponent
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/dns-config.sh
+          inputs:
+            process:
+              command_prefix: /usr/bin/sudo
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: dns_vm
+      - type: cloudify.relationships.connected_to
+        target: dns_app
+      - type: cloudify.relationships.connected_to
+        target: bono_app
+      - type: cloudify.relationships.connected_to
+        target: ellis_app
+      - type: cloudify.relationships.connected_to
+        target: ralf_app
+      - type: cloudify.relationships.connected_to
+        target: sprout_app
+      - type: cloudify.relationships.connected_to
+        target: homer_app
+      - type: cloudify.relationships.connected_to
+        target: homestead_app
 
 outputs:
   web:

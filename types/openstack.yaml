@@ -5,6 +5,7 @@ node_types:
       cloudify_agent:
         default:
           user: { get_input: cloudify_agent }
+          key: { get_input: example_openstack_key_file }
       server:
         default:
           image: { get_input: server_image }
