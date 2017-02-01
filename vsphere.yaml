@@ -96,37 +96,37 @@ dsl_definitions:
 node_templates:
 
   bono_vm:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
   ellis_vm:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
   sprout_vm:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
   homer_vm:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
   homestead_vm:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
   ralf_vm:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
   bind_host:
-    type: clearwater.nodes.Server
+    type: clearwater.nodes.MonitoredServer
     properties:
       connection_config: *connection_config
 
