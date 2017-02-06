@@ -5,6 +5,7 @@ node_types:
       cloudify_agent:
         default:
           user: { get_input: cloudify_agent }
+          key: { get_input: example_aws_key_file }
       image_id:
         default: { get_input: image_id }
       instance_type:
