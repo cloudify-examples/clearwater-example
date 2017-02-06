@@ -2,7 +2,7 @@
 
 node_types:
     policy_node_type:
-       derived_from: cloudify.nodes.Root
+       derived_from: cloudify.nodes.SoftwareComponent
        properties:
           nodes_to_monitor:
              default: []

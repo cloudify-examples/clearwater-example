@@ -1,6 +1,6 @@
 node_types:
 
-  clearwater.nodes.Server:
+  clearwater.nodes.MonitoredServer:
     derived_from: cloudify.vsphere.nodes.Server
     properties:
       cloudify_agent:
@@ -21,3 +21,14 @@ node_types:
               management: True
               external: True
               use_dhcp: True
+    interfaces:
+      cloudify.interfaces.monitoring_agent:
+        install:
+          implementation: diamond.diamond_agent.tasks.install
+          inputs:
+            diamond_config:
+              default:
+                interval: 10
+        start: diamond.diamond_agent.tasks.start
+        stop: diamond.diamond_agent.tasks.stop
+        uninstall: diamond.diamond_agent.tasks.uninstall

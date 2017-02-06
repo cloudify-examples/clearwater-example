@@ -53,7 +53,7 @@ def check_heal(nodes_to_monitor,depl_id):
                 execution_id=c.executions.start(depl_id,'heal',{'node_id': instance.id})
             except InfluxDBClientError as ee:
                f.write('DBClienterror {0}\n'.format(str(ee)))
-               f.write('instance id is {0}\n'.format(instance))   
+               f.write('instance id is {0}\n'.format(instance))
             except Exception as e:
                f.write(str(e))
 #               check_heal(nodes_to_monitor,depl_id)

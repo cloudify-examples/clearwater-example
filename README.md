@@ -14,12 +14,21 @@ Some parts of this blueprint are based on the project Clearwater [documentation]
 ## Repository Contents
 This repository includes the following:
 
-1. A TOSCA blueprint to deploy Clearwater on OpenStack including relationships and dependencies between the various Clearwater components.
+1. A TOSCA blueprint to deploy Clearwater on OpenStack, AWS and vSphere including relationships and dependencies between the various Clearwater components.
 2. A DNS plugin to point each node (Bono, Ellis, Homer, Homestead, Sprout and Ralf) to the deployed DNS
 3. Scripts to install the application stack on each node
 
-
 The blueprint supports healing, e.g you can kill Bono and as a result a new VM would be instantiated and the Bono application stack will be installed on it. The relationships to other nodes will make sure that these nodes are also wired properly with the newly created Bono VM. 
+
+## AWS
+This blueprint assumes a network architecture that includes a private and public network in a single VPC, like the [AWS VPC Scenario 2](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario2.html).
+See [AWS Example Blueprint](https://github.com/cloudify-examples/aws-azure-openstack-blueprint/tree/master/aws)
+All nodes connected to an elastic ip will be contained in the public subnet (Bono and Ellis) and all nodes with no elastic ip will be contained in the private subnet (Homer, Homestead, Sprout and Ralf).
+
+#### Inputs
+`existing_vpc_id` is the manager's vpc id.
+`existing_public_subnet_id` is the manager's public subnet id.
+`existing_private_subnet_id` is the manager's private subnet id.
 
 ## Using the Blueprint
 #### Step 0 

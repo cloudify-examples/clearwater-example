@@ -1,15 +1,15 @@
 node_types:
   clearwater.nodes.MonitoredServer:
-    derived_from: cloudify.openstack.nodes.Server
+    derived_from: cloudify.aws.nodes.Instance
     properties:
       cloudify_agent:
         default:
           user: { get_input: cloudify_agent }
-          key: { get_input: example_openstack_key_file }
-      server:
-        default:
-          image: { get_input: server_image }
-          flavor_name: { get_input: server_flavor_name }
+          key: { get_input: example_aws_key_file }
+      image_id:
+        default: { get_input: image_id }
+      instance_type:
+        default: { get_input: image_size }
     interfaces:
       cloudify.interfaces.monitoring_agent:
         install:
@@ -21,4 +21,3 @@ node_types:
         start: diamond.diamond_agent.tasks.start
         stop: diamond.diamond_agent.tasks.stop
         uninstall: diamond.diamond_agent.tasks.uninstall
-
