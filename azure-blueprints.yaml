@@ -1,0 +1,661 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+########################################################
+
+imports:
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-azure-plugin/1.4.2/plugin.yaml
+  - application-blueprint.yaml
+  - types/azure.yaml
+  - types/policy.yaml
+
+inputs:
+
+  resource_prefix:
+    default: clrwtr
+
+  resource_suffix:
+    default: 10
+
+  # Azure account information
+
+  subscription_id:
+    type: string
+    required: false
+
+  tenant_id:
+    type: string
+    required: false
+
+  client_id:
+    type: string
+    required: false
+
+  client_secret:
+    type: string
+    required: false
+
+  location:
+    type: string
+    required: true
+    default: eastus
+
+  retry_after:
+    type: integer
+    default: 60
+
+  # Existing manager resources
+  mgr_resource_group_name:
+    type: string
+    required: true
+
+  mgr_virtual_network_name:
+    type: string
+    required: true
+
+  mgr_subnet_name:
+    type: string
+    required: true
+
+  azure_agent_key_file:
+    type: string
+    required: true
+
+  agent_user:
+    default: cloudify
+
+  # Virtual Machine information
+
+  vm_size:
+    type: string
+    required: true
+    default: Standard_A2
+
+  vm_os_family:
+    type: string
+    required: true
+    default: linux
+
+  vm_image_publisher:
+    type: string
+    required: true
+    default: Canonical
+
+  vm_image_offer:
+    type: string
+    required: true
+    default: UbuntuServer
+
+  vm_image_sku:
+    type: string
+    required: true
+    default: 14.04.4-LTS
+
+  vm_image_version:
+    type: string
+    required: true
+    default: 14.04.201604060
+
+  vm_os_username:
+    description: >
+      Username to create as the VM's administrator user
+    type: string
+    required: true
+    default: cloudify
+
+  vm_os_password:
+    description: >
+      Password to use for the VM's administrator user
+    type: string
+    required: true
+    default: Cl0ud1fy!
+
+  vm_os_pubkeys:
+    description: the public key
+    default:
+    - path: {concat:[ '/home/', { get_input: vm_os_username }, '/.ssh/authorized_keys' ]}
+      keyData:
+        "ssh-rsa AAAAA3----your-key-here----aabbzz"
+
+  vm_os_pubkey_auth_only:
+    default: true
+
+  azure_configuration:
+    default:
+      subscription_id: { get_input: subscription_id }
+      tenant_id: { get_input: tenant_id }
+      client_id: { get_input: client_id }
+      client_secret: { get_input: client_secret }
+
+node_templates:
+
+  a_node:
+    type: cloudify.nodes.Compute
+    properties:
+      install_agent: false
+
+  policy_node:
+    type: policy_node_type
+    relationships:
+      - target: bono_vm
+        type: cloudify.relationships.depends_on
+      - target: sprout_vm
+        type: cloudify.relationships.depends_on
+      - target: a_node
+        type: cloudify.relationships.contained_in
+    properties:
+       nodes_to_monitor:
+          - ellis_vm
+          - bono_vm
+          - sprout_vm
+          - homestead_vm
+          - homer_vm
+          - ralf_vm
+          - bind_host
+
+  ellis_vm:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: ellis_vm_nic
+
+  bono_vm:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: bono_vm_nic
+
+  sprout_vm:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: sprout_vm_nic
+
+  homestead_vm:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: homestead_vm_nic
+
+  homer_vm:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: homer_vm_nic
+
+  ralf_vm:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: ralf_vm_nic
+
+  bind_host:
+    type: clearwater.nodes.MonitoredServer
+    properties:
+      azure_config: { get_input: azure_configuration }
+    relationships:
+      - type: cloudify.azure.relationships.contained_in_resource_group
+        target: resource_group
+      - type: cloudify.azure.relationships.connected_to_storage_account
+        target: storage_account
+      - type: cloudify.azure.relationships.connected_to_availability_set
+        target: availability_set
+      - type: cloudify.azure.relationships.connected_to_nic
+        target: bind_host_nic
+
+  resource_group:
+    type: cloudify.azure.nodes.ResourceGroup
+    properties:
+      name: {concat:[{get_input: resource_prefix},arg,{get_input: resource_suffix}]}
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+
+  storage_account:
+    type: cloudify.azure.nodes.storage.StorageAccount
+    properties:
+      name: {concat:[{get_input: resource_prefix},asa,{get_input: resource_suffix}]}
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        accountType: Standard_LRS
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  virtual_network:
+    type: cloudify.azure.nodes.network.VirtualNetwork
+    properties:
+      resource_group_name: { get_input: mgr_resource_group_name }
+      name: { get_input: mgr_virtual_network_name }
+      azure_config: { get_input: azure_configuration }
+      use_external_resource: true
+      location: { get_input: location }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  subnet:
+    type: cloudify.azure.nodes.network.Subnet
+    properties:
+      resource_group_name: { get_input: mgr_resource_group_name }
+      name: { get_input: mgr_subnet_name }
+      azure_config: { get_input: azure_configuration }
+      use_external_resource: true
+      location: { get_input: location }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_virtual_network
+      target: virtual_network
+
+  network_security_group:
+    type: cloudify.azure.nodes.network.NetworkSecurityGroup
+    properties:
+      name: {concat:[{get_input: resource_prefix},nsg,{get_input: resource_suffix}]}
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        securityRules:
+        - name: all_tcp
+          properties:
+            description: All TCP
+            protocol: Tcp
+            sourcePortRange: '*'
+            destinationPortRange: '*'
+            sourceAddressPrefix: '*'
+            destinationAddressPrefix: '*'
+            priority: 100
+            access: Allow
+            direction: Inbound
+        - name: all_ucp
+          properties:
+            description: All UDP
+            protocol: Udp
+            sourcePortRange: '*'
+            destinationPortRange: '*'
+            sourceAddressPrefix: '*'
+            destinationAddressPrefix: '*'
+            priority: 101
+            access: Allow
+            direction: Inbound
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  availability_set:
+    type: cloudify.azure.nodes.compute.AvailabilitySet
+    properties:
+      name: {concat:[{get_input: resource_prefix},availset,{get_input: resource_suffix}]}
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  ellis_vm_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: ellis_vm_nic_ip_cfg
+
+  bono_vm_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: bono_vm_nic_ip_cfg
+
+  sprout_vm_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: sprout_vm_nic_ip_cfg
+
+  homestead_vm_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: homestead_vm_nic_ip_cfg
+
+  homer_vm_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: homer_vm_nic_ip_cfg
+
+  ralf_vm_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: ralf_vm_nic_ip_cfg
+
+  bind_host_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: bind_host_nic_ip_cfg
+
+  ellis_vm_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_public_ip
+      target: ellis_ip
+
+  bono_vm_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_public_ip
+      target: bono_ip
+
+  sprout_vm_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+
+  homestead_vm_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+
+  homer_vm_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+
+  ralf_vm_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+
+  bind_host_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
+    properties:
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        privateIPAllocationMethod: Dynamic
+    relationships:
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+
+  ellis_ip:
+    type: cloudify.azure.nodes.network.PublicIPAddress
+    properties:
+      name: {concat:[{get_input: resource_prefix},ellis_pip,{get_input: resource_suffix}]}
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        publicIPAllocationMethod: Static
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  bono_ip:
+    type: cloudify.azure.nodes.network.PublicIPAddress
+    properties:
+      name: {concat:[{get_input: resource_prefix},bono_pip,{get_input: resource_suffix}]}
+      location: { get_input: location }
+      azure_config: { get_input: azure_configuration }
+      retry_after: { get_input: retry_after }
+      resource_config:
+        publicIPAllocationMethod: Static
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+#########################################################
+
+  bono:
+    type: clearwater.nodes.bono
+    properties:
+      private_domain: { get_input: private_domain }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            public_ip: { get_attribute: [ bono_vm, public_ip ] }
+    relationships:
+        - type: monitors_bono_nodes
+          target: bono_vm
+        - type: app_connected_to_bind
+          target: bind
+          target_interfaces:
+            cloudify.interfaces.relationship_lifecycle:
+              establish:
+                inputs:
+                  public_ip: { get_attribute: [ bono_vm, public_ip ] }
+
+  ellis:
+    type: clearwater.nodes.ellis
+    properties:
+      private_domain: { get_input: private_domain }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            public_ip: { get_attribute: [ ellis_vm, public_ip ] }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: ellis_vm
+      - type: app_connected_to_bind_ellis
+        target: bind
+        target_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              inputs:
+                public_ip: { get_attribute: [ ellis_vm, public_ip ] }
+
+  ralf:
+    type: clearwater.nodes.ralf
+    properties:
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_ralf_nodes
+        target: ralf_vm
+      - type: app_connected_to_bind
+        target: bind
+
+  homestead:
+    type: clearwater.nodes.homestead
+    properties:
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_homestead_nodes
+        target: homestead_vm
+      - type: app_connected_to_bind
+        target: bind
+
+  homer:
+    type: clearwater.nodes.homer
+    properties:
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: homer_vm
+      - type: app_connected_to_bind
+        target: bind
+
+  sprout:
+    type: clearwater.nodes.sprout
+    properties:
+      private_domain: { get_input: private_domain }
+    relationships:
+      - type: monitors_sprout_nodes
+        target: sprout_vm
+      - type: app_connected_to_bind
+        target: bind
+
+  bind:
+    type: clearwater.infra.bind
+    properties:
+      private_domain: { get_input: private_domain }
+      public_domain: { get_input: public_domain }
+      secret_code: secret
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: bind_host
+
+########################################################
+
+outputs:
+  web:
+    description: Web application endpoint
+    value:
+      ip_ellis: { get_attribute: [ ellis_vm, public_ip ] }
+      ip_bono: { get_attribute: [ bono_vm, public_ip ] }
+      signup_code: secret
+  stress_test:
+    description: Information needed to install stress test
+    value:
+      ip_homer: { get_attribute: [ homer_vm, ip ] }
+      ip_homestead: { get_attribute: [ homestead_vm, ip ] }
+      ip_bono: { get_attribute: [ bono_vm, ip ] }
