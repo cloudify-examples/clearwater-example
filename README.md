@@ -30,6 +30,16 @@ All nodes connected to an elastic ip will be contained in the public subnet (Bon
 `existing_public_subnet_id` is the manager's public subnet id.
 `existing_private_subnet_id` is the manager's private subnet id.
 
+## Azure
+If you do not already have a key pair on your Azure manager, you can create one using the [rsa-key-blueprint](https://raw.githubusercontent.com/cloudify-examples/cloudify-key-plugin/master/examples/rsa-key-blueprint.yaml).
+Use the private key path to populate your azure_agent_key_file input and your outputs to populate the key data in the vm_os_pubkeys input.
+
+#### Inputs
+`azure_agent_key_file` is the pre installed key on the manager.
+`mgr_resource_group_name` is the manager's resource group name.
+`mgr_virtual_network_name` is the manager's virtual network name.
+`mgr_subnet_name` is the manager's subnet name.
+
 ## Using the Blueprint
 #### Step 0 
 [Install the Cloudify CLI](http://docs.getcloudify.org/3.3.0/intro/installation/) and [bootstrap a Cloudify manager](http://docs.getcloudify.org/3.3.0/manager/bootstrapping/). 
