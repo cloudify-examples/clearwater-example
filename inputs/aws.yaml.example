@@ -1,0 +1,11 @@
+vpc_id: vpc-829588e6
+vpc_cidr_block: 172.16.0.0/16
+public_subnet_id: subnet-d6ed089f
+public_subnet_cidr: 172.16.122.0/24
+private_subnet_id: subnet-e9ed08a0
+private_subnet_cidr: 172.16.123.0/24
+ec2_region_name: eu-west-1
+ec2_region_endpoint: ec2.eu-west-1.amazonaws.com
+availability_zone: eu-west-1a
+ami: ami-b9b394ca
+instance_type: m3.large
