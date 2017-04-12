@@ -11,28 +11,10 @@ imports:
 inputs:
 
   resource_prefix:
-    default: clrwtr
+    default: clr
 
   resource_suffix:
-    default: 10
-
-  # Azure account information
-
-  subscription_id:
-    type: string
-    required: false
-
-  tenant_id:
-    type: string
-    required: false
-
-  client_id:
-    type: string
-    required: false
-
-  client_secret:
-    type: string
-    required: false
+    default: '1'
 
   location:
     type: string
@@ -56,19 +38,12 @@ inputs:
     type: string
     required: true
 
-  azure_agent_key_file:
-    type: string
-    required: true
-
-  agent_user:
-    default: cloudify
-
   # Virtual Machine information
 
   vm_size:
     type: string
     required: true
-    default: Standard_A2
+    default: Standard_A0
 
   vm_os_family:
     type: string
@@ -95,7 +70,7 @@ inputs:
     required: true
     default: 14.04.201604060
 
-  vm_os_username:
+  agent_user:
     description: >
       Username to create as the VM's administrator user
     type: string
@@ -109,22 +84,28 @@ inputs:
     required: true
     default: Cl0ud1fy!
 
+  agent_user_public_key_data:
+    default: ssh-rsa AAAAA3----your-key-here----aabbzz
+
   vm_os_pubkeys:
     description: the public key
     default:
-    - path: {concat:[ '/home/', { get_input: vm_os_username }, '/.ssh/authorized_keys' ]}
-      keyData:
-        "ssh-rsa AAAAA3----your-key-here----aabbzz"
+    - path: {concat:[ '/home/', { get_input: agent_user }, '/.ssh/authorized_keys' ]}
+      keyData: { get_input: agent_user_public_key_data }
 
   vm_os_pubkey_auth_only:
     default: true
 
-  azure_configuration:
-    default:
-      subscription_id: { get_input: subscription_id }
-      tenant_id: { get_input: tenant_id }
-      client_id: { get_input: client_id }
-      client_secret: { get_input: client_secret }
+  cloudify_manager_agent_key_path:
+    default: /home/cloudify/.ssh/id_rsa
+
+dsl_definitions:
+
+  azure_config: &azure_config
+    subscription_id: { get_secret: subscription_id }
+    tenant_id: { get_secret: tenant_id }
+    client_id: { get_secret: client_id }
+    client_secret: { get_secret: client_secret }
 
 node_templates:
 
@@ -155,7 +136,7 @@ node_templates:
   ellis_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -169,7 +150,7 @@ node_templates:
   bono_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -183,7 +164,7 @@ node_templates:
   sprout_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -197,7 +178,7 @@ node_templates:
   homestead_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -211,7 +192,7 @@ node_templates:
   homer_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -225,7 +206,7 @@ node_templates:
   ralf_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -239,7 +220,7 @@ node_templates:
   bind_host:
     type: clearwater.nodes.MonitoredServer
     properties:
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -255,14 +236,14 @@ node_templates:
     properties:
       name: {concat:[{get_input: resource_prefix},arg,{get_input: resource_suffix}]}
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
 
   storage_account:
     type: cloudify.azure.nodes.storage.StorageAccount
     properties:
       name: {concat:[{get_input: resource_prefix},asa,{get_input: resource_suffix}]}
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         accountType: Standard_LRS
@@ -275,7 +256,7 @@ node_templates:
     properties:
       resource_group_name: { get_input: mgr_resource_group_name }
       name: { get_input: mgr_virtual_network_name }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       use_external_resource: true
       location: { get_input: location }
     relationships:
@@ -287,7 +268,7 @@ node_templates:
     properties:
       resource_group_name: { get_input: mgr_resource_group_name }
       name: { get_input: mgr_subnet_name }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       use_external_resource: true
       location: { get_input: location }
     relationships:
@@ -299,7 +280,7 @@ node_templates:
     properties:
       name: {concat:[{get_input: resource_prefix},nsg,{get_input: resource_suffix}]}
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         securityRules:
@@ -334,7 +315,7 @@ node_templates:
     properties:
       name: {concat:[{get_input: resource_prefix},availset,{get_input: resource_suffix}]}
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -344,7 +325,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -358,7 +339,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -372,7 +353,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -386,7 +367,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -400,7 +381,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -414,7 +395,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -428,7 +409,7 @@ node_templates:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
@@ -442,7 +423,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -456,7 +437,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -470,7 +451,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -482,7 +463,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -494,7 +475,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -506,7 +487,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -518,7 +499,7 @@ node_templates:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         privateIPAllocationMethod: Dynamic
@@ -531,7 +512,7 @@ node_templates:
     properties:
       name: {concat:[{get_input: resource_prefix},ellis_pip,{get_input: resource_suffix}]}
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         publicIPAllocationMethod: Static
@@ -544,7 +525,7 @@ node_templates:
     properties:
       name: {concat:[{get_input: resource_prefix},bono_pip,{get_input: resource_suffix}]}
       location: { get_input: location }
-      azure_config: { get_input: azure_configuration }
+      azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
         publicIPAllocationMethod: Static

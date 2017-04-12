@@ -1,0 +1,9 @@
+# ###################################
+# Azure
+# Example Inputs file for azure-blueprint.yaml
+
+# These values are those of your manager.
+mgr_resource_group_name: '' # The ID of the resource group that your manager VM is deployed in.
+mgr_virtual_network_name: '' # The ID of the virtual network that your manager VM private IP NIC is on.
+mgr_subnet_name: '' # The ID of the subnet that your manager VM private IP NIC is on.
+agent_user_public_key_data: "" # The public key material

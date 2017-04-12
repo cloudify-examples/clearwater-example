@@ -19,7 +19,7 @@ node_types:
               sku: { get_input: vm_image_sku }
               version: { get_input: vm_image_version }
           osProfile:
-            adminUsername: { get_input: vm_os_username }
+            adminUsername: { get_input: agent_user }
             adminPassword: { get_input: vm_os_password }
             linuxConfiguration:
               ssh:
@@ -28,7 +28,7 @@ node_types:
       agent_config:
         default:
           user: { get_input: agent_user }
-          key: { get_input: azure_agent_key_file }
+          key: { get_input: cloudify_manager_agent_key_path }
           install_method: remote
     interfaces:
       cloudify.interfaces.monitoring_agent:

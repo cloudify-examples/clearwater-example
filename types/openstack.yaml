@@ -2,14 +2,18 @@ node_types:
   clearwater.nodes.MonitoredServer:
     derived_from: cloudify.openstack.nodes.Server
     properties:
-      cloudify_agent:
+      agent_config:
         default:
-          user: { get_input: cloudify_agent }
-          key: { get_input: example_openstack_key_file }
+          install_method: remote
+          user: { get_input: agent_user }
+          key: { get_property: [ key, private_key_path ] }
       server:
         default:
-          image: { get_input: server_image }
-          flavor_name: { get_input: server_flavor_name }
+          image: { get_input: image }
+          flavor: { get_input: flavor }
+      management_network_name:
+        default:
+          { get_property: [ private_network, resource_id ] }
     interfaces:
       cloudify.interfaces.monitoring_agent:
         install:

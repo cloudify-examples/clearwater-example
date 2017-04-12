@@ -44,23 +44,12 @@ Use the private key path to populate your azure_agent_key_file input and your ou
 #### Step 0 
 [Install the Cloudify CLI](http://docs.getcloudify.org/3.3.0/intro/installation/) and [bootstrap a Cloudify manager](http://docs.getcloudify.org/3.3.0/manager/bootstrapping/). 
 
-#### Step 1
-Upload the blueprint to the manager using the following command: 
+#### Install
+
 ```
-cfy blueprints upload -b clearwater -p openstack-blueprint.yaml
+cfy install openstack-blueprint.yaml -i inputs/aws.yaml.example -p clearwater
 ```
 
-#### Step 2
-Create a deployment using the following command:
-```
-cfy deployments create -b clearwater -d clearwater
-```
-
-#### Step 3 
-Invoke the `install` workflow: 
-```
-cfy executions start -d clearwater -w install
-```
 
 #### Make a phone call with Jitsi
 
@@ -80,7 +69,7 @@ If everthing worked, you should be able to make phone calls between the two comp
 #### Uninstalling
 To uninstall and delete the running deployment, invoke the `uninstall` workflow: 
 ```
-cfy executions start -d clearwater -w uninstall
+cfy uninstall clearwater
 ```
 
 The following picture shows a running deployment example as it appears in the GUI
