@@ -1,0 +1,9 @@
+# ###################################
+# Azure
+# Example Inputs file for azure-blueprint.yaml
+
+# These values are those of your manager.
+mgr_resource_group_name: 'pmcfytearg0' # The ID of the resource group that your manager VM is deployed in.
+mgr_virtual_network_name: 'pmcfyteavn0' # The ID of the virtual network that your manager VM private IP NIC is on.
+mgr_subnet_name: 'pmcfyteaps0' # The ID of the subnet that your manager VM private IP NIC is on.
+agent_user_public_key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9z24t/GU5qHqnvgiWI7LH4KBix3kWH3+lBYJmgrhPkSOZQzenBdywJzvPXGDRAQZjDE3wzcdA6vJolCMlstl6PnoND1KQtdDQjqU3brG8kyIcAFNVOe2Eew5xJlds0IyLpgKv6ei42i55B0AJpnco19hVu+ibP2EvU3Ts1opo3d0VGyMMVX2C1usQqyqFd1kppNybVuMqGddRX7ANErqJcpvb/gmVNKxmlTg2H8nHOMYdZTz0QNeC8HHuje5vHSG2s1vVA7ZCBR6FwJwxMMaucdPVXvxolunkIW5LPBa+rHZFHjDDzKIz9RycDMo2AIPRCl9ohXy+VGKtco2OIPiEFopSVzNU6QMaHoGT72CuUMWYDZ9jf98qY7D1iBaL0c9sueVVdn04SbB8hfhmnTpY6JO7CFGsfoCd5buRtDCdzEacNDt2YtmbP6H1uMHXYVGDpiuu/CoDYkPNu6oUnVgaRMD+nVlZgNgI7AQYFoCgn+JkSgKeKXJgGdK5SbKwxhre3cB2g2evZicV6iOlXkduvi9JC473R8NOfOA/t07SaLOSYypgtjOPIBlmsN4dBaBB4wThUIiAOG7f1nkm9wTOJ5zfWwlytIJF0oZmyKb4rw/c2D1bxStC6xvhF//AzScDZlsKdBHqa3N1tthH8aREAj+0KwwLMzbgziHipGv9ow== cloudify@cloudify" # The public key material
