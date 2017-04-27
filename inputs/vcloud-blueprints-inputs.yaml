@@ -1,0 +1,10 @@
+  vcloud_service: ""
+  vcloud_instance: ""
+  vcloud_org_url: ""
+  ssl_verify: false
+  server_cpu: 2
+  server_memory: 2048
+  user: ubuntu
+  private_keypath: "~/.ssh/agent_key.pem"
+  network_public_nat_use_existing: false
+  network_use_existing: false
