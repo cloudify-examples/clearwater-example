@@ -3,54 +3,27 @@ tosca_definitions_version: cloudify_dsl_1_3
 ########################################################
 
 imports:
-  - http://www.getcloudify.org/spec/aws-plugin/1.4.4/plugin.yaml
+  - http://getcloudify.org.s3.amazonaws.com/spec/aws-plugin/1.4.10/plugin.yaml
   - application-blueprint.yaml
   - types/aws.yaml
   - types/policy.yaml
+  - types/cloud_config/cloud-config.yaml
 
 inputs:
 
-  key_name:
-    default: clearwater-blueprint-key
-
-  private_key_path:
-    default: ~/.ssh/clearwater-blueprint-key.pem
-
-  vpc_id:
-    type: string
-
-  vpc_cidr_block:
-    type: string
-
-  public_subnet_id:
-    type: string
-
-  public_subnet_cidr:
-    type: string
-
-  private_subnet_id:
-    type: string
-
-  private_subnet_cidr:
-    type: string
-
-  ec2_region_name:
-    default: us-east-1
-
-  ec2_region_endpoint:
-    default: ec2.us-east-1.amazonaws.com
-
-  availability_zone:
-    default: us-east-1e
-
   ami:
     description: >
-      Amazon Ubuntu 14.04 AMI
+      An AWS AMI. Tested with a Ubuntu 14.04 image.
+    default: { get_secret: ubuntu_trusty_image }
 
   instance_type:
-    default: m3.medium
+    description: >
+      The AWS instance_type. Tested with m3.medium, although that is unnecessarily large.
+    default: m3.large
 
   agent_user:
+    description: >
+      The username of the agent running on the instance created from the image.
     default: ubuntu
 
 dsl_definitions:
@@ -58,8 +31,8 @@ dsl_definitions:
     aws_config: &aws_config
       aws_access_key_id: { get_secret: aws_access_key_id }
       aws_secret_access_key: { get_secret: aws_secret_access_key }
-      ec2_region_name: { get_input: ec2_region_name }
-      ec2_region_endpoint: { get_input: ec2_region_endpoint }
+      ec2_region_name: { get_secret: ec2_region_name }
+      ec2_region_endpoint: { get_secret: ec2_region_endpoint }
 
 node_templates:
 
@@ -111,7 +84,7 @@ node_templates:
         - ip_protocol: tcp
           from_port: 0
           to_port: 65535
-          cidr_ip: { get_input: vpc_cidr_block }
+          cidr_ip: 0.0.0.0/0
         - ip_protocol: udp
           from_port: 161
           to_port: 162
@@ -422,45 +395,6 @@ node_templates:
       aws_config: *aws_config
       domain: vpc
 
-  vpc:
-    type: cloudify.aws.nodes.VPC
-    properties:
-      aws_config: *aws_config
-      use_external_resource: true
-      resource_id: { get_input: vpc_id }
-      cidr_block: { get_input: vpc_cidr_block }
-
-  public_subnet:
-    type: cloudify.aws.nodes.Subnet
-    properties:
-      aws_config: *aws_config
-      use_external_resource: true
-      resource_id: { get_input: public_subnet_id }
-      cidr_block: { get_input: public_subnet_cidr }
-      availability_zone: { get_input: availability_zone }
-    relationships:
-      - type: cloudify.aws.relationships.subnet_contained_in_vpc
-        target: vpc
-
-  private_subnet:
-    type: cloudify.aws.nodes.Subnet
-    properties:
-      aws_config: *aws_config
-      use_external_resource: true
-      resource_id: { get_input: private_subnet_id }
-      cidr_block: { get_input: private_subnet_cidr }
-      availability_zone: { get_input: availability_zone }
-    relationships:
-      - type: cloudify.aws.relationships.subnet_contained_in_vpc
-        target: vpc
-
-  key:
-    type: cloudify.aws.nodes.KeyPair
-    properties:
-      aws_config: *aws_config
-      resource_id: { get_input: key_name }
-      private_key_path: { get_input: private_key_path }
-
   ellis_vm:
     type: clearwater.nodes.MonitoredServer
     properties:
@@ -476,8 +410,6 @@ node_templates:
         target: all_nodes_external
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: ellis_vm_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: public_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
 
@@ -498,8 +430,6 @@ node_templates:
         target: bono_vm_security_group
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: bono_to_others_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: public_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
 
@@ -516,8 +446,6 @@ node_templates:
         target: sprout_vm_security_group
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: sprout_to_others_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: private_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
 
@@ -534,8 +462,6 @@ node_templates:
         target: homestead_vm_security_group
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: homestead_to_others_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: private_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
 
@@ -552,8 +478,6 @@ node_templates:
         target: homer_vm_security_group
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: homer_to_others_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: private_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
 
@@ -570,8 +494,6 @@ node_templates:
         target: ralf_vm_security_group
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: ralf_to_others_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: private_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
 
@@ -586,10 +508,59 @@ node_templates:
         target: all_nodes_external
       - type: cloudify.aws.relationships.instance_connected_to_security_group
         target: bind_host_security_group
-      - type: cloudify.aws.relationships.instance_connected_to_keypair
-        target: key
       - target: private_subnet
         type: cloudify.aws.relationships.instance_contained_in_subnet
+
+
+  public_subnet:
+    type: cloudify.aws.nodes.Subnet
+    properties:
+      aws_config: *aws_config
+      use_external_resource: true
+      resource_id: { get_secret: public_subnet_id }
+      cidr_block: N/A
+      availability_zone: N/A
+    relationships:
+      - type: cloudify.aws.relationships.subnet_contained_in_vpc
+        target: vpc
+
+  private_subnet:
+    type: cloudify.aws.nodes.Subnet
+    properties:
+      aws_config: *aws_config
+      use_external_resource: true
+      resource_id: { get_secret: private_subnet_id }
+      cidr_block:  N/A
+      availability_zone:  N/A
+    relationships:
+      - type: cloudify.aws.relationships.subnet_contained_in_vpc
+        target: vpc
+
+  vpc:
+    type: cloudify.aws.nodes.VPC
+    properties:
+      aws_config: *aws_config
+      use_external_resource: true
+      resource_id: { get_secret: vpc_id }
+      cidr_block: N/A
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: cloudify_host_cloud_config
+
+  cloudify_host_cloud_config:
+    type: cloudify.nodes.CloudConfig
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            cloud_config:
+              users:
+              - name: { get_input: agent_user }
+                groups: sudo
+                shell: /bin/bash
+                sudo: ['ALL=(ALL) NOPASSWD:ALL']
+                ssh-authorized-keys:
+                - { get_secret: agent_key_public }
 
 ########################################################
 

@@ -3,10 +3,12 @@ tosca_definitions_version: cloudify_dsl_1_3
 ########################################################
 
 imports:
-  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-azure-plugin/1.4.2/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-azure-plugin/1.4.3/plugin.yaml
   - application-blueprint.yaml
   - types/azure.yaml
   - types/policy.yaml
+
+inputs:
 
 inputs:
 
@@ -14,90 +16,31 @@ inputs:
     default: clr
 
   resource_suffix:
-    default: '1'
-
-  location:
-    type: string
-    required: true
-    default: eastus
+    default: '0'
 
   retry_after:
     type: integer
     default: 60
 
-  # Existing manager resources
-  mgr_resource_group_name:
-    type: string
-    required: true
+  size:
+    default: { get_secret: small_image_size }
 
-  mgr_virtual_network_name:
-    type: string
-    required: true
-
-  mgr_subnet_name:
-    type: string
-    required: true
-
-  # Virtual Machine information
-
-  vm_size:
-    type: string
-    required: true
-    default: Standard_A0
-
-  vm_os_family:
-    type: string
-    required: true
-    default: linux
-
-  vm_image_publisher:
-    type: string
-    required: true
-    default: Canonical
-
-  vm_image_offer:
-    type: string
-    required: true
-    default: UbuntuServer
-
-  vm_image_sku:
-    type: string
-    required: true
-    default: 14.04.4-LTS
-
-  vm_image_version:
-    type: string
-    required: true
-    default: 14.04.201604060
+  image:
+    default:
+      publisher: { get_secret: ubuntu_trusty_image_publisher }
+      offer: { get_secret: ubuntu_trusty_image_offer }
+      sku: { get_secret: ubuntu_trusty_image_sku }
+      version: { get_secret: ubuntu_trusty_image_version }
 
   agent_user:
-    description: >
-      Username to create as the VM's administrator user
-    type: string
-    required: true
-    default: cloudify
+    description: The user name of the agent on the instance created from the image.
+    default: ubuntu
 
-  vm_os_password:
-    description: >
-      Password to use for the VM's administrator user
-    type: string
-    required: true
-    default: Cl0ud1fy!
-
-  agent_user_public_key_data:
-    default: ssh-rsa AAAAA3----your-key-here----aabbzz
-
-  vm_os_pubkeys:
+  ssh_public_keys:
     description: the public key
     default:
     - path: {concat:[ '/home/', { get_input: agent_user }, '/.ssh/authorized_keys' ]}
-      keyData: { get_input: agent_user_public_key_data }
-
-  vm_os_pubkey_auth_only:
-    default: true
-
-  cloudify_manager_agent_key_path:
-    default: /home/cloudify/.ssh/id_rsa
+      keyData: { get_secret: agent_key_public }
 
 dsl_definitions:
 
@@ -231,55 +174,11 @@ node_templates:
       - type: cloudify.azure.relationships.connected_to_nic
         target: bind_host_nic
 
-  resource_group:
-    type: cloudify.azure.nodes.ResourceGroup
-    properties:
-      name: {concat:[{get_input: resource_prefix},arg,{get_input: resource_suffix}]}
-      location: { get_input: location }
-      azure_config: *azure_config 
-
-  storage_account:
-    type: cloudify.azure.nodes.storage.StorageAccount
-    properties:
-      name: {concat:[{get_input: resource_prefix},asa,{get_input: resource_suffix}]}
-      location: { get_input: location }
-      azure_config: *azure_config 
-      retry_after: { get_input: retry_after }
-      resource_config:
-        accountType: Standard_LRS
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-
-  virtual_network:
-    type: cloudify.azure.nodes.network.VirtualNetwork
-    properties:
-      resource_group_name: { get_input: mgr_resource_group_name }
-      name: { get_input: mgr_virtual_network_name }
-      azure_config: *azure_config 
-      use_external_resource: true
-      location: { get_input: location }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-
-  subnet:
-    type: cloudify.azure.nodes.network.Subnet
-    properties:
-      resource_group_name: { get_input: mgr_resource_group_name }
-      name: { get_input: mgr_subnet_name }
-      azure_config: *azure_config 
-      use_external_resource: true
-      location: { get_input: location }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_virtual_network
-      target: virtual_network
-
   network_security_group:
     type: cloudify.azure.nodes.network.NetworkSecurityGroup
     properties:
       name: {concat:[{get_input: resource_prefix},nsg,{get_input: resource_suffix}]}
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -314,7 +213,7 @@ node_templates:
     type: cloudify.azure.nodes.compute.AvailabilitySet
     properties:
       name: {concat:[{get_input: resource_prefix},availset,{get_input: resource_suffix}]}
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -324,7 +223,7 @@ node_templates:
   ellis_vm_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -338,7 +237,7 @@ node_templates:
   bono_vm_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -352,7 +251,7 @@ node_templates:
   sprout_vm_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -366,7 +265,7 @@ node_templates:
   homestead_vm_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -380,7 +279,7 @@ node_templates:
   homer_vm_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -394,7 +293,7 @@ node_templates:
   ralf_vm_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -408,7 +307,7 @@ node_templates:
   bind_host_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
     relationships:
@@ -422,7 +321,7 @@ node_templates:
   ellis_vm_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -436,7 +335,7 @@ node_templates:
   bono_vm_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -450,7 +349,7 @@ node_templates:
   sprout_vm_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -462,7 +361,7 @@ node_templates:
   homestead_vm_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -474,7 +373,7 @@ node_templates:
   homer_vm_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -486,7 +385,7 @@ node_templates:
   ralf_vm_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -498,7 +397,7 @@ node_templates:
   bind_host_nic_ip_cfg:
     type: cloudify.azure.nodes.network.IPConfiguration
     properties:
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -511,7 +410,7 @@ node_templates:
     type: cloudify.azure.nodes.network.PublicIPAddress
     properties:
       name: {concat:[{get_input: resource_prefix},ellis_pip,{get_input: resource_suffix}]}
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -524,7 +423,7 @@ node_templates:
     type: cloudify.azure.nodes.network.PublicIPAddress
     properties:
       name: {concat:[{get_input: resource_prefix},bono_pip,{get_input: resource_suffix}]}
-      location: { get_input: location }
+      location: { get_secret: location }
       azure_config: *azure_config 
       retry_after: { get_input: retry_after }
       resource_config:
@@ -532,6 +431,49 @@ node_templates:
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
       target: resource_group
+
+  subnet:
+    type: cloudify.azure.nodes.network.Subnet
+    properties:
+      resource_group_name: { get_secret: mgr_resource_group_name }
+      name: { get_secret: mgr_subnet_name }
+      azure_config: *azure_config
+      use_external_resource: true
+      location: { get_secret: location }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_virtual_network
+      target: virtual_network
+
+  virtual_network:
+    type: cloudify.azure.nodes.network.VirtualNetwork
+    properties:
+      resource_group_name: { get_secret: mgr_resource_group_name }
+      name: { get_secret: mgr_virtual_network_name }
+      azure_config: *azure_config
+      use_external_resource: true
+      location: { get_secret: location }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  storage_account:
+    type: cloudify.azure.nodes.storage.StorageAccount
+    properties:
+      location: { get_secret: location }
+      azure_config: *azure_config
+      retry_after: { get_input: retry_after }
+      resource_config:
+        accountType: Standard_LRS
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  resource_group:
+    type: cloudify.azure.nodes.ResourceGroup
+    properties:
+      name: {concat:[{get_input: resource_prefix},arg,{get_input: resource_suffix}]}
+      location: { get_secret: location }
+      azure_config: *azure_config
 
 #########################################################
 
