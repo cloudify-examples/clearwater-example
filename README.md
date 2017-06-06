@@ -1,9 +1,52 @@
 [![Build Status](https://circleci.com/gh/cloudify-examples/clearwater-nfv-blueprint.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/cloudify-examples/clearwater-nfv-blueprint)
 
-# TOSCA Based Deployment and Monitoring of Clearwater vIMS
+# Clearwater NFV Blueprint
 
 This repository contains a [Cloudify](http://getcloudify.org) blueprint for deploying MetaSwitch Clearwater vIMS Cloudify, a TOSCA based VNF Orchestrator and policy engine.
 [This video](https://youtu.be/ZsT78d1BR5s) shows how the bluerint is used for deployment, configuration, monitoring and healing/scalingof Clearwater. 
+
+
+## prerequisites
+
+You will need a *Cloudify Manager* running in either AWS, Azure, or Openstack.
+
+If you have not already, set up the [example Cloudify environment](https://github.com/cloudify-examples/cloudify-environment-setup). Installing that blueprint and following all of the configuration instructions will ensure you have all of the prerequisites, including keys, plugins, and secrets.
+
+
+### Execute Install
+
+Next you provide those inputs to the blueprint and execute install:
+
+
+#### For AWS run:
+
+```shell
+$ cfy install \
+    https://github.com/cloudify-examples/clearwater-nfv-blueprint/archive/4.0.1.1.zip \
+    -b clr \
+    -n aws-blueprint.yaml
+```
+
+
+#### For Azure run:
+
+```shell
+$ cfy install \
+    https://github.com/cloudify-examples/clearwater-nfv-blueprint/archive/4.0.1.1.zip \
+    -b clr \
+    -n azure-blueprint.yaml
+```
+
+
+#### For Openstack run:
+
+```shell
+$ cfy install \
+    https://github.com/cloudify-examples/clearwater-nfv-blueprint/archive/4.0.1.1.zip \
+    -b clr \
+    -n openstack-blueprint.yaml
+```
+
 
 ## Clearwater Documentation
 
@@ -18,37 +61,7 @@ This repository includes the following:
 2. A DNS plugin to point each node (Bono, Ellis, Homer, Homestead, Sprout and Ralf) to the deployed DNS
 3. Scripts to install the application stack on each node
 
-The blueprint supports healing, e.g you can kill Bono and as a result a new VM would be instantiated and the Bono application stack will be installed on it. The relationships to other nodes will make sure that these nodes are also wired properly with the newly created Bono VM. 
-
-## AWS
-This blueprint assumes a network architecture that includes a private and public network in a single VPC, like the [AWS VPC Scenario 2](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario2.html).
-See [AWS Example Blueprint](https://github.com/cloudify-examples/aws-azure-openstack-blueprint/tree/master/aws)
-All nodes connected to an elastic ip will be contained in the public subnet (Bono and Ellis) and all nodes with no elastic ip will be contained in the private subnet (Homer, Homestead, Sprout and Ralf).
-
-#### Inputs
-`existing_vpc_id` is the manager's vpc id.
-`existing_public_subnet_id` is the manager's public subnet id.
-`existing_private_subnet_id` is the manager's private subnet id.
-
-## Azure
-If you do not already have a key pair on your Azure manager, you can create one using the [rsa-key-blueprint](https://raw.githubusercontent.com/cloudify-examples/cloudify-key-plugin/master/examples/rsa-key-blueprint.yaml).
-Use the private key path to populate your azure_agent_key_file input and your outputs to populate the key data in the vm_os_pubkeys input.
-
-#### Inputs
-`azure_agent_key_file` is the pre installed key on the manager.
-`mgr_resource_group_name` is the manager's resource group name.
-`mgr_virtual_network_name` is the manager's virtual network name.
-`mgr_subnet_name` is the manager's subnet name.
-
-## Using the Blueprint
-#### Step 0 
-[Install the Cloudify CLI](http://docs.getcloudify.org/3.3.0/intro/installation/) and [bootstrap a Cloudify manager](http://docs.getcloudify.org/3.3.0/manager/bootstrapping/). 
-
-#### Install
-
-```
-cfy install openstack-blueprint.yaml -i inputs/aws.yaml.example -p clearwater
-```
+The blueprint supports healing, e.g you can kill Bono and as a result a new VM would be instantiated and the Bono application stack will be installed on it. The relationships to other nodes will make sure that these nodes are also wired properly with the newly created Bono VM.
 
 
 #### Make a phone call with Jitsi
