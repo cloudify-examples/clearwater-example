@@ -16,7 +16,7 @@ dependencies:
     - pip install https://github.com/cloudify-cosmo/cloudify-rest-client/archive/master.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-dsl-parser/archive/master.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-plugins-common/archive/master.zip
-    - pip install https://github.com/cloudify-cosmo/cloudify-script-plugin/archive/1.4.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-script-plugin/archive/master.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-cli/archive/master.zip
 
 test:
@@ -25,6 +25,8 @@ test:
     - cfy blueprints validate openstack-blueprint.yaml
     - cfy blueprints validate aws-blueprint.yaml
     - cfy blueprints validate azure-blueprint.yaml
+    - cfy blueprints validate vcloud-blueprint.yaml
+    - cfy blueprints validate vsphere-blueprint.yaml
 
 deployment:
   release:

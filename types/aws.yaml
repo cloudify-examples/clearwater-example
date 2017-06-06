@@ -2,19 +2,28 @@ node_types:
   clearwater.nodes.MonitoredServer:
     derived_from: cloudify.aws.nodes.Instance
     properties:
-      agent_config:
-        default:
-          install_method: remote
-          user: { get_input: agent_user }
-          key: { get_input: private_key_path }
       image_id:
         default: { get_input: ami }
       instance_type:
         default: { get_input: instance_type }
-      parameters:
+      agent_config:
         default:
-          placement: { get_input: availability_zone }
+          install_method: remote
+          user: { get_input: agent_user }
+          port: 22
+          key: { get_secret: agent_key_private }
     interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: aws.cloudify_aws.ec2.instance.create
+          inputs:
+            args:
+              default:
+                block_device_map:
+                  '/dev/sda1':
+                    delete_on_termination: true
+                placement: { get_secret: availability_zone }
+                user_data: { get_attribute: [ cloudify_host_cloud_config, cloud_config ] }
       cloudify.interfaces.monitoring_agent:
         install:
           implementation: diamond.diamond_agent.tasks.install
