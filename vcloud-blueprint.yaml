@@ -1,10 +1,8 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/4.0/types.yaml
   - https://raw.githubusercontent.com/cloudify-cosmo/tosca-vcloud-plugin/1.4/plugin.yaml
   - types/vcloud.yaml
-#  - http://www.getcloudify.org/spec/diamond-plugin/1.3.5/plugin.yaml
   - types/policy.yaml
   - application-blueprint.yaml
 
