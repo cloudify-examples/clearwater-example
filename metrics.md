@@ -3,7 +3,7 @@
 Metrics are gathered by diamond agent installed on each node and put into cloudify-monitoring RabbitMQ.
  
 ## Cloudify RabbitMQ 
-###RabbitMQ connection details:
+### RabbitMQ connection details:
 Name | Value
 --- | ---
 **IP**: | Cloudify Manager IP 
@@ -12,11 +12,11 @@ Name | Value
 **exchange**: | cloudify-monitoring
 **routing-key**: | *
 
-###Message format:
+### Message format:
 ```
 {"metric": <value>, "host": <host node id>, "node_id": <host node instance id>, "path": <path of the metric>, "node_name": <node instance id>, "time": <unix timestamp>, "deployment_id": <deployment id>, "type": <metric type>}
 ```
-####Example:
+#### Example:
 ```
 {"metric": 0.0, "host": "sprout_vm", "node_id": "sprout_vm_78e3e", "path": "sproutDeRegistrationAttempts_scopePrevious5MinutePeriod", "unit": "", "name": "snmp", "service": "clearwater-nfv-blueprint.sprout_vm_78e3e.sprout_vm_78e3e.snmp.sproutDeRegistrationAttempts.scopePrevious5MinutePeriod", "node_name": "sprout_vm_78e3e", "time": 1475859236, "deployment_id": "clearwater-nfv-blueprint", "type": "GAUGE"}
 ```
@@ -26,7 +26,7 @@ Name | Value
 SNMP metrics documentation is described on the site [http://clearwater.readthedocs.io](http://clearwater.readthedocs.io/en/stable/Clearwater_SNMP_Statistics.html)
 Port 161 UDP must be enabled to send and read the metrics.
 
-###Available Clearwater SNMP metrics with OID
+### Available Clearwater SNMP metrics with OID
 
 Metric Name | Metric OID
 --- | ---
