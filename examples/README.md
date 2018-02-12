@@ -1,1 +1,0 @@
-To run examples copy them to the root directory. All paths then will have correct structure.
